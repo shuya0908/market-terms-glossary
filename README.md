@@ -1,6 +1,6 @@
 # マーケット用語ターミナル
 
-市場系システムエンジニア向けの金融・市場用語集＋クイズツールです。証券取引・注文執行・清算決済・デリバティブ・為替・債券・規制など、市場系システムの開発・保守で押さえておきたい用語を1つのHTMLファイルにまとめています。
+市場系システムエンジニア向けの金融・市場用語集＋クイズツールです。証券取引・注文執行・清算決済・デリバティブ・為替・債券・規制など、市場系システムの開発・保守で押さえておきたい用語をまとめています。
 
 ## できること
 
@@ -13,7 +13,13 @@
 
 ## 使い方
 
-`market-terms.html` をブラウザで開くだけで動作します。サーバーやビルド環境は不要です。
+用語データは `terms.json` に分離されており、`marketterms.html` が読み込み時に `fetch` で取得します。そのため `file://` で直接開くとブラウザのCORS制限により `terms.json` を読み込めません。`marketterms.html` と `terms.json` を同じフォルダに置いたまま、簡易HTTPサーバーを起動して開いてください（ビルド環境は不要です）。
+
+```
+python3 -m http.server 8000
+```
+
+その後ブラウザで `http://localhost:8000/marketterms.html` を開きます。
 
 ## 収録内容
 
@@ -21,7 +27,12 @@
 
 ## 技術構成
 
-HTML / CSS / JavaScript のみで構成された単一ファイルのWebアプリケーションです。外部ライブラリへの依存はGoogle Fonts（Zen Kaku Gothic New, Noto Sans JP, IBM Plex Mono）のみです。
+HTML / CSS / JavaScript のみで構成されたWebアプリケーションで、ビルド環境は不要です。用語データは `terms.json` に分離しており、`marketterms.html` が起動時に `fetch` で読み込みます。外部ライブラリへの依存はGoogle Fonts（Zen Kaku Gothic New, Noto Sans JP, IBM Plex Mono）のみです。
+
+## ファイル構成
+
+- `marketterms.html` — 画面表示・検索・クイズ・マーク・バックアップなどのロジック一式
+- `terms.json` — 組み込みの用語データ（用語・ふりがな・カテゴリ・定義）
 
 ## 免責事項
 
