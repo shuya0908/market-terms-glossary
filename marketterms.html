@@ -1,0 +1,1618 @@
+<title>マーケット用語ターミナル</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EEF1EC;
+    --surface:#FFFFFF;
+    --surface-alt:#E3E9E1;
+    --border:#C7D0C3;
+    --ink:#131A10;
+    --ink-muted:#57635A;
+    --accent:hsl(40 75% 36%);
+    --accent-ink:#FFFFFF;
+    --accent-soft:hsl(40 70% 94%);
+    --success:#1F8A5C;
+    --success-soft:hsl(150 45% 93%);
+    --success-ink:#0E4B31;
+    --danger:#B8412A;
+    --danger-soft:hsl(10 60% 94%);
+    --danger-ink:#6B2214;
+    --shadow:0 1px 2px rgba(20,25,15,.07),0 6px 18px rgba(20,25,15,.06);
+    --chip-bg-s:55%; --chip-bg-l:93%;
+    --chip-fg-s:48%; --chip-fg-l:34%;
+    --radius:5px;
+    --font-display:"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP",sans-serif;
+    --font-body:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
+    --font-mono:"IBM Plex Mono","SFMono-Regular",Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0B0D08;
+      --surface:#14170F;
+      --surface-alt:#1C2116;
+      --border:#333A28;
+      --ink:#ECE8D9;
+      --ink-muted:#9CA48E;
+      --accent:hsl(40 85% 58%);
+      --accent-ink:#14170A;
+      --accent-soft:hsl(40 55% 18%);
+      --success:#4CC38A;
+      --success-soft:hsl(150 40% 15%);
+      --success-ink:#B7EFD3;
+      --danger:#E2704F;
+      --danger-soft:hsl(10 45% 17%);
+      --danger-ink:#F6C6B4;
+      --shadow:0 1px 2px rgba(0,0,0,.45),0 8px 24px rgba(0,0,0,.4);
+      --chip-bg-s:40%; --chip-bg-l:20%;
+      --chip-fg-s:55%; --chip-fg-l:78%;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0B0D08;
+    --surface:#14170F;
+    --surface-alt:#1C2116;
+    --border:#333A28;
+    --ink:#ECE8D9;
+    --ink-muted:#9CA48E;
+    --accent:hsl(40 85% 58%);
+    --accent-ink:#14170A;
+    --accent-soft:hsl(40 55% 18%);
+    --success:#4CC38A;
+    --success-soft:hsl(150 40% 15%);
+    --success-ink:#B7EFD3;
+    --danger:#E2704F;
+    --danger-soft:hsl(10 45% 17%);
+    --danger-ink:#F6C6B4;
+    --shadow:0 1px 2px rgba(0,0,0,.45),0 8px 24px rgba(0,0,0,.4);
+    --chip-bg-s:40%; --chip-bg-l:20%;
+    --chip-fg-s:55%; --chip-fg-l:78%;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--font-body);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--accent-soft);color:var(--ink);}
+  a{color:var(--accent);}
+  button{font-family:inherit;}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px 64px;}
+
+  /* header */
+  header{padding:40px 0 22px;}
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:.72rem;
+    letter-spacing:.14em;
+    color:var(--accent);
+    text-transform:uppercase;
+    margin:0 0 10px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .eyebrow::before{content:"";width:7px;height:7px;background:var(--accent);border-radius:1px;display:inline-block;}
+  h1{
+    font-family:var(--font-display);
+    font-weight:900;
+    font-size:clamp(1.7rem,4vw,2.5rem);
+    margin:0 0 10px;
+    text-wrap:balance;
+    letter-spacing:-.01em;
+  }
+  header p{
+    margin:0;
+    max-width:60ch;
+    color:var(--ink-muted);
+    font-size:.98rem;
+  }
+
+  /* ticker */
+  .ticker{
+    border-top:1px solid var(--border);
+    border-bottom:1px solid var(--border);
+    background:var(--surface-alt);
+    overflow:hidden;
+    white-space:nowrap;
+    margin-top:28px;
+  }
+  .ticker-track{
+    display:inline-flex;
+    animation:ticker-scroll 75s linear infinite;
+    will-change:transform;
+  }
+  .ticker:hover .ticker-track,.ticker:focus-within .ticker-track{animation-play-state:paused;}
+  @keyframes ticker-scroll{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+  @media (prefers-reduced-motion: reduce){
+    .ticker-track{animation:none;}
+    .ticker{overflow-x:auto;}
+  }
+  .ticker-item{
+    font-family:var(--font-mono);
+    font-size:.8rem;
+    padding:9px 22px;
+    color:var(--ink-muted);
+    display:inline-flex;
+    gap:10px;
+    border-right:1px solid var(--border);
+  }
+  .ticker-item b{color:var(--ink);font-weight:600;}
+
+  /* tabs */
+  .tabbar{
+    display:flex;
+    gap:2px;
+    margin:30px 0 0;
+    border-bottom:1px solid var(--border);
+  }
+  .tab{
+    background:none;border:none;
+    padding:12px 18px 13px;
+    font-size:.95rem;
+    color:var(--ink-muted);
+    cursor:pointer;
+    border-bottom:2px solid transparent;
+    margin-bottom:-1px;
+    display:flex;flex-direction:column;gap:2px;
+  }
+  .tab span.jp{font-family:var(--font-display);font-weight:700;color:inherit;}
+  .tab span.en{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.1em;color:inherit;opacity:.65;}
+  .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);}
+  .tab:hover{color:var(--ink);}
+
+  panel-body{display:block;}
+  .panel{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-top:none;
+    border-radius:0 0 var(--radius) var(--radius);
+    padding:26px;
+    box-shadow:var(--shadow);
+  }
+  [hidden]{display:none !important;}
+
+  /* diagrams */
+  .diagrams{display:flex;flex-direction:column;gap:20px;margin-bottom:30px;}
+  .diagrams > p.lead{margin:0;color:var(--ink-muted);font-size:.9rem;max-width:70ch;}
+  .diagram-card{border:1px solid var(--border);border-radius:4px;background:var(--surface-alt);padding:18px 20px 16px;}
+  .diagram-card h3{font-family:var(--font-display);font-weight:700;font-size:.98rem;margin:0 0 4px;}
+  .diagram-card figure{margin:0;}
+  .diagram-card svg{width:100%;height:auto;display:block;margin-top:10px;overflow:visible;}
+  .diagram-card figcaption{font-size:.82rem;color:var(--ink-muted);margin-top:10px;line-height:1.75;}
+  .dg-text{font-family:var(--font-body);}
+  .dg-mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums;}
+
+  /* controls */
+  .controls{display:flex;flex-direction:column;gap:14px;margin-bottom:22px;}
+  .search-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  .cat-actions{display:flex;align-items:center;gap:8px;}
+  .cat-actions .sep{color:var(--border);font-size:.78rem;}
+  .btn-link{
+    background:none;border:none;padding:0;
+    font-family:var(--font-mono);
+    font-size:.78rem;
+    color:var(--accent);
+    cursor:pointer;
+  }
+  .btn-link:hover{text-decoration:underline;}
+  input[type="search"],select{
+    font-family:var(--font-mono);
+    font-size:.88rem;
+    background:var(--surface-alt);
+    border:1px solid var(--border);
+    color:var(--ink);
+    padding:9px 12px;
+    border-radius:4px;
+  }
+  input[type="search"]{flex:1;min-width:180px;}
+  .count{
+    font-family:var(--font-mono);
+    font-size:.78rem;
+    color:var(--ink-muted);
+    margin-left:auto;
+    font-variant-numeric:tabular-nums;
+    white-space:nowrap;
+  }
+  .chiprow{display:flex;flex-wrap:wrap;gap:8px;}
+  .catchip{
+    --h:0;
+    font-family:var(--font-body);
+    font-size:.8rem;
+    font-weight:500;
+    padding:6px 12px;
+    border-radius:999px;
+    border:1px solid var(--border);
+    background:var(--surface-alt);
+    color:var(--ink-muted);
+    cursor:pointer;
+    transition:background .12s,color .12s,border-color .12s;
+  }
+  .catchip[aria-pressed="true"]{
+    background:hsl(var(--h) var(--chip-bg-s) var(--chip-bg-l));
+    color:hsl(var(--h) var(--chip-fg-s) var(--chip-fg-l));
+    border-color:hsl(var(--h) var(--chip-bg-s) calc(var(--chip-bg-l) - 18%));
+    font-weight:700;
+  }
+
+  /* glossary grid */
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(270px,1fr));
+    gap:14px;
+  }
+  .card{
+    border:1px solid var(--border);
+    border-left:3px solid hsl(var(--h) var(--chip-bg-s) 44%);
+    border-radius:4px;
+    padding:15px 16px;
+    background:var(--surface);
+    display:flex;flex-direction:column;gap:8px;
+  }
+  .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+  .card-actions{display:flex;align-items:center;gap:8px;}
+  .card-controls{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+  .term{font-family:var(--font-display);font-weight:700;font-size:1.05rem;margin:0;}
+  .kana{font-family:var(--font-mono);font-size:.72rem;color:var(--ink-muted);display:block;margin-top:2px;}
+  .tag{
+    flex-shrink:0;
+    font-size:.68rem;
+    font-family:var(--font-mono);
+    letter-spacing:.03em;
+    padding:3px 8px;
+    border-radius:999px;
+    background:hsl(var(--h) var(--chip-bg-s) var(--chip-bg-l));
+    color:hsl(var(--h) var(--chip-fg-s) var(--chip-fg-l));
+    white-space:nowrap;
+  }
+  .mark-btn{
+    background:none;border:none;padding:0;
+    width:22px;height:22px;
+    font-size:1.15rem;line-height:22px;
+    color:var(--ink-muted);
+    cursor:pointer;
+  }
+  .mark-btn:hover{color:var(--accent);}
+  .mark-btn[aria-pressed="true"]{color:var(--accent);}
+  .def-toggle{
+    align-self:flex-start;
+    background:none;border:none;padding:0;
+    font-family:var(--font-mono);
+    font-size:.74rem;
+    letter-spacing:.02em;
+    color:var(--accent);
+    cursor:pointer;
+  }
+  .def-toggle:hover{text-decoration:underline;}
+  .def{font-size:.88rem;color:var(--ink);line-height:1.75;margin:0;}
+  .empty{color:var(--ink-muted);font-size:.9rem;padding:30px 4px;text-align:center;}
+
+  .marked-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:20px;}
+  .marked-header .count{font-family:var(--font-mono);font-size:.82rem;color:var(--ink-muted);font-variant-numeric:tabular-nums;}
+  .tab-count{font-family:var(--font-mono);font-size:.7rem;opacity:.8;margin-left:2px;}
+
+  .refs{margin-top:34px;padding-top:20px;border-top:1px solid var(--border);}
+  .refs h2{font-family:var(--font-display);font-size:.95rem;margin:0 0 10px;}
+  .refs ul{margin:0;padding-left:1.2em;color:var(--ink-muted);font-size:.85rem;line-height:1.9;}
+  .refs li{overflow-wrap:anywhere;word-break:break-word;}
+  .refs li a{overflow-wrap:anywhere;word-break:break-word;}
+
+  /* quiz */
+  .quiz-setup{max-width:560px;}
+  .field-label{font-size:.8rem;font-weight:700;color:var(--ink-muted);margin:0 0 8px;font-family:var(--font-display);}
+  .setup-block{margin-bottom:22px;}
+  .row2{display:flex;gap:14px;flex-wrap:wrap;}
+  .row2 > div{flex:1;min-width:160px;}
+  .stat-line{
+    font-family:var(--font-mono);
+    font-size:.8rem;
+    color:var(--ink-muted);
+    background:var(--surface-alt);
+    border:1px solid var(--border);
+    border-radius:4px;
+    padding:10px 14px;
+    margin-bottom:22px;
+    font-variant-numeric:tabular-nums;
+  }
+  .stat-line b{color:var(--ink);}
+  .warn{color:var(--danger);font-size:.82rem;min-height:1.2em;margin:-8px 0 14px;}
+  .btn{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:.92rem;
+    border:1px solid var(--accent);
+    background:var(--accent);
+    color:var(--accent-ink);
+    padding:11px 22px;
+    border-radius:4px;
+    cursor:pointer;
+  }
+  .btn:hover{filter:brightness(1.06);}
+  .btn.ghost{background:transparent;color:var(--ink);border-color:var(--border);}
+  .btn.ghost:hover{border-color:var(--accent);color:var(--accent);}
+  .btn.small{padding:8px 14px;font-size:.82rem;}
+  .btn[disabled]{opacity:.45;cursor:not-allowed;}
+
+  .quiz-head{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:10px;font-family:var(--font-mono);font-size:.78rem;color:var(--ink-muted);font-variant-numeric:tabular-nums;}
+  .progress{height:4px;background:var(--surface-alt);border-radius:2px;overflow:hidden;margin-bottom:26px;}
+  .progress-fill{height:100%;background:var(--accent);transition:width .25s ease;}
+  .q-card{margin-bottom:20px;}
+  .q-eyebrow{display:flex;gap:8px;align-items:center;margin-bottom:12px;}
+  .q-prompt{font-size:1.08rem;line-height:1.75;margin:0;font-family:var(--font-body);}
+  .q-prompt.is-term{font-family:var(--font-display);font-weight:700;font-size:1.4rem;}
+  .options{display:grid;gap:10px;}
+  .opt{
+    display:block;
+    text-align:left;
+    background:var(--surface-alt);
+    border:1px solid var(--border);
+    border-radius:4px;
+    padding:13px 15px;
+    font-size:.9rem;
+    line-height:1.6;
+    color:var(--ink);
+    cursor:pointer;
+  }
+  .opt-main{display:block;}
+  .opt-explain{
+    display:block;
+    margin-top:8px;
+    padding-top:8px;
+    border-top:1px dashed var(--border);
+    font-size:.8rem;
+    line-height:1.6;
+    color:var(--ink-muted);
+  }
+  .opt:hover:not(:disabled){border-color:var(--accent);}
+  .opt:disabled{cursor:default;}
+  .opt.correct{background:var(--success-soft);border-color:var(--success);color:var(--success-ink);}
+  .opt.wrong{background:var(--danger-soft);border-color:var(--danger);color:var(--danger-ink);}
+  .opt.correct .opt-explain,.opt.wrong .opt-explain{border-top-color:currentColor;opacity:.85;}
+  .quiz-actions{display:flex;justify-content:flex-end;margin-top:18px;}
+
+  .result-score{font-family:var(--font-mono);font-size:2.6rem;font-weight:600;font-variant-numeric:tabular-nums;margin:6px 0 2px;}
+  .result-rate{color:var(--ink-muted);font-size:.9rem;margin-bottom:26px;}
+  .missed{border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:24px;}
+  .missed-item{padding:13px 15px;border-bottom:1px solid var(--border);}
+  .missed-item:last-child{border-bottom:none;}
+  .missed-item .term{font-size:.94rem;}
+  .missed-item .def{margin-top:4px;}
+  .none-missed{color:var(--ink-muted);font-size:.9rem;padding:16px 0;}
+  .result-actions{display:flex;gap:10px;}
+
+  footer{margin-top:40px;color:var(--ink-muted);font-size:.78rem;font-family:var(--font-mono);}
+  .backup-bar{margin-top:32px;padding:14px 16px;border:1px solid var(--border);border-radius:4px;background:var(--surface-alt);display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:space-between;}
+  .backup-note{flex:1 1 260px;color:var(--ink-muted);font-size:.82rem;line-height:1.5;margin:0;}
+  .backup-actions{display:flex;gap:8px;flex-wrap:wrap;flex:0 0 auto;}
+
+  .modal-overlay{
+    position:fixed; inset:0;
+    background:rgba(10,12,8,.55);
+    display:flex; align-items:center; justify-content:center;
+    padding:20px;
+    z-index:1000;
+  }
+  .modal{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:26px;
+    max-width:480px;
+    width:100%;
+    max-height:90vh;
+    overflow-y:auto;
+    box-shadow:var(--shadow);
+  }
+  .modal h2{font-family:var(--font-display);font-size:1.1rem;margin:0 0 18px;}
+  .modal-field{margin-bottom:16px;}
+  .modal-field label{display:block;font-size:.78rem;font-weight:700;color:var(--ink-muted);margin-bottom:6px;font-family:var(--font-display);}
+  .modal-field input,.modal-field select,.modal-field textarea{
+    width:100%;
+    font-family:var(--font-body);
+    font-size:.9rem;
+    background:var(--surface-alt);
+    border:1px solid var(--border);
+    border-radius:4px;
+    padding:9px 11px;
+    color:var(--ink);
+    box-sizing:border-box;
+  }
+  .modal-field textarea{resize:vertical;}
+  .modal-warn{color:var(--danger);font-size:.82rem;min-height:1.2em;margin:0 0 10px;}
+  .modal-actions{display:flex;justify-content:space-between;align-items:center;margin-top:4px;gap:10px;flex-wrap:wrap;}
+  .modal-actions-right{display:flex;gap:10px;margin-left:auto;}
+  .modal-confirm{max-width:380px;}
+  .confirm-message{margin:0 0 22px;font-size:.94rem;line-height:1.6;color:var(--ink);white-space:pre-line;}
+
+  @media (max-width:520px){
+    .panel{padding:18px;}
+    .count{margin-left:0;}
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Market Systems Reference</p>
+    <h1>マーケット用語ターミナル</h1>
+    <p>市場系システムエンジニアが押さえておきたい取引所・清算決済・システム用語を、閲覧と4択クイズの両方で学べるツールです。</p>
+  </header>
+
+  <div class="ticker" id="ticker" aria-hidden="true">
+    <div class="ticker-track" id="tickerTrack"></div>
+  </div>
+
+  <div class="tabbar" role="tablist" aria-label="表示切り替え">
+    <button class="tab" id="tabGlossaryBtn" role="tab" aria-selected="true" aria-controls="panelGlossary">
+      <span class="jp">用語集</span><span class="en">GLOSSARY</span>
+    </button>
+    <button class="tab" id="tabMarkedBtn" role="tab" aria-selected="false" aria-controls="panelMarked">
+      <span class="jp">マーク済み<span class="tab-count" id="markedTabCount"></span></span><span class="en">WATCHLIST</span>
+    </button>
+    <button class="tab" id="tabQuizBtn" role="tab" aria-selected="false" aria-controls="panelQuiz">
+      <span class="jp">問題演習</span><span class="en">QUIZ</span>
+    </button>
+  </div>
+
+  <div class="panel" id="panelGlossary" role="tabpanel" aria-labelledby="tabGlossaryBtn">
+
+    <div class="diagrams">
+      <p class="lead">用語だけでは像を結びにくい2つの仕組みを図解します。板の読み方と、注文がフロント・ミドル・バックを通って決済に至るまでの流れです。</p>
+
+      <div class="diagram-card">
+        <h3>板（気配）の読み方</h3>
+        <figure>
+          <svg viewBox="0 0 660 292" role="img" aria-label="板の例。売り気配3本と買い気配3本が呼値1円刻みで並び、最良売気配2,001円と最良買気配2,000円の差1円がスプレッドになっている。">
+            <text x="135" y="20" text-anchor="middle" class="dg-text" font-size="11" font-weight="700" fill="var(--ink-muted)">売数量</text>
+            <text x="330" y="20" text-anchor="middle" class="dg-text" font-size="11" font-weight="700" fill="var(--ink-muted)">気配値</text>
+            <text x="525" y="20" text-anchor="middle" class="dg-text" font-size="11" font-weight="700" fill="var(--ink-muted)">買数量</text>
+            <line x1="40" y1="32" x2="620" y2="32" stroke="var(--border)" stroke-width="1"/>
+
+            <rect x="40" y="38"  width="580" height="30" fill="var(--danger-soft)"/>
+            <rect x="40" y="68"  width="580" height="30" fill="var(--danger-soft)"/>
+            <rect x="40" y="98"  width="580" height="30" fill="var(--danger-soft)"/>
+            <rect x="40" y="128" width="580" height="34" fill="var(--accent-soft)"/>
+            <rect x="40" y="162" width="580" height="30" fill="var(--success-soft)"/>
+            <rect x="40" y="192" width="580" height="30" fill="var(--success-soft)"/>
+            <rect x="40" y="222" width="580" height="30" fill="var(--success-soft)"/>
+            <line x1="40" y1="128" x2="620" y2="128" stroke="var(--danger)" stroke-width="1.2"/>
+            <line x1="40" y1="162" x2="620" y2="162" stroke="var(--success)" stroke-width="1.2"/>
+
+            <!-- ask rows -->
+            <text x="135" y="51"  text-anchor="middle" class="dg-mono" font-size="11" fill="var(--danger-ink)">400</text>
+            <rect x="153" y="57" width="72" height="6" rx="1" fill="var(--danger)" opacity="0.75"/>
+            <text x="330" y="57"  text-anchor="middle" class="dg-mono" font-size="13" font-weight="500" fill="var(--danger-ink)">2,003円</text>
+
+            <text x="135" y="81"  text-anchor="middle" class="dg-mono" font-size="11" fill="var(--danger-ink)">300</text>
+            <rect x="171" y="87" width="54" height="6" rx="1" fill="var(--danger)" opacity="0.75"/>
+            <text x="330" y="87"  text-anchor="middle" class="dg-mono" font-size="13" font-weight="500" fill="var(--danger-ink)">2,002円</text>
+
+            <text x="135" y="111" text-anchor="middle" class="dg-mono" font-size="11" fill="var(--danger-ink)">150</text>
+            <rect x="198" y="117" width="27" height="6" rx="1" fill="var(--danger)" opacity="0.75"/>
+            <text x="330" y="117" text-anchor="middle" class="dg-mono" font-size="13.5" font-weight="700" fill="var(--danger-ink)">2,001円</text>
+
+            <!-- spread -->
+            <text x="330" y="145" text-anchor="middle" class="dg-text" font-size="10.5" fill="var(--ink)">最良売気配 2,001円 − 最良買気配 2,000円</text>
+            <text x="330" y="159" text-anchor="middle" class="dg-text" font-size="10.5" font-weight="700" fill="var(--ink)">＝ スプレッド 1円</text>
+
+            <!-- bid rows -->
+            <text x="330" y="181" text-anchor="middle" class="dg-mono" font-size="13.5" font-weight="700" fill="var(--success-ink)">2,000円</text>
+            <rect x="435" y="181" width="36" height="6" rx="1" fill="var(--success)" opacity="0.75"/>
+            <text x="525" y="175" text-anchor="middle" class="dg-mono" font-size="11" fill="var(--success-ink)">200</text>
+
+            <text x="330" y="211" text-anchor="middle" class="dg-mono" font-size="13" font-weight="500" fill="var(--success-ink)">1,999円</text>
+            <rect x="435" y="211" width="63" height="6" rx="1" fill="var(--success)" opacity="0.75"/>
+            <text x="525" y="205" text-anchor="middle" class="dg-mono" font-size="11" fill="var(--success-ink)">350</text>
+
+            <text x="330" y="241" text-anchor="middle" class="dg-mono" font-size="13" font-weight="500" fill="var(--success-ink)">1,998円</text>
+            <rect x="435" y="241" width="90" height="6" rx="1" fill="var(--success)" opacity="0.75"/>
+            <text x="525" y="235" text-anchor="middle" class="dg-mono" font-size="11" fill="var(--success-ink)">500</text>
+
+            <!-- tick size bracket between 2,002円 and 2,001円 -->
+            <line x1="16" y1="68" x2="16" y2="98" stroke="var(--ink-muted)" stroke-width="1"/>
+            <line x1="11" y1="68" x2="21" y2="68" stroke="var(--ink-muted)" stroke-width="1"/>
+            <line x1="11" y1="98" x2="21" y2="98" stroke="var(--ink-muted)" stroke-width="1"/>
+            <text x="8" y="83" transform="rotate(-90 8 83)" text-anchor="middle" class="dg-text" font-size="8" fill="var(--ink-muted)">呼値1円</text>
+
+            <!-- legend -->
+            <rect x="220" y="262" width="12" height="12" rx="2" fill="var(--danger)"/>
+            <text x="236" y="272" class="dg-text" font-size="10" fill="var(--ink-muted)">売り気配</text>
+            <rect x="340" y="262" width="12" height="12" rx="2" fill="var(--success)"/>
+            <text x="356" y="272" class="dg-text" font-size="10" fill="var(--ink-muted)">買い気配</text>
+          </svg>
+          <figcaption>板は、ある銘柄に出されている買い注文・売り注文を値段順に並べたもの。ここでは呼値（価格の刻み幅）を1円として、売り気配3本・買い気配3本を例示している。最も安い売り気配（最良売気配）と最も高い買い気配（最良買気配）の差がスプレッドで、ザラ場ではこの差を埋めるように新たな注文が付き合わされ約定していく。</figcaption>
+        </figure>
+      </div>
+
+      <div class="diagram-card">
+        <h3>取引処理の流れ（フロント・ミドル・バック）</h3>
+        <figure>
+          <svg viewBox="0 0 860 400" role="img" aria-label="投資家の注文はフロントの発注システムから取引所・PTSへ送られ約定する。ミドルはフロントのリスクとポジションを常時監視し、約定後はバックが取引を照合したうえで清算機関と決済システムに指図を送る。">
+            <defs>
+              <marker id="dg2-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill="var(--ink-muted)"/>
+              </marker>
+            </defs>
+
+            <!-- main flow arrows -->
+            <line x1="110" y1="90" x2="134" y2="90" stroke="var(--ink-muted)" stroke-width="1.2" marker-end="url(#dg2-arrow)"/>
+            <text x="123" y="50" text-anchor="middle" class="dg-text" font-size="9.5" fill="var(--ink-muted)">発注</text>
+            <line x1="306" y1="90" x2="330" y2="90" stroke="var(--ink-muted)" stroke-width="1.2" marker-end="url(#dg2-arrow)"/>
+            <text x="319" y="50" text-anchor="middle" class="dg-text" font-size="9.5" fill="var(--ink-muted)">SOR/送信</text>
+            <line x1="502" y1="90" x2="526" y2="90" stroke="var(--ink-muted)" stroke-width="1.2" marker-end="url(#dg2-arrow)"/>
+            <text x="515" y="50" text-anchor="middle" class="dg-text" font-size="9.5" fill="var(--ink-muted)">約定通知</text>
+            <line x1="698" y1="90" x2="722" y2="90" stroke="var(--ink-muted)" stroke-width="1.2" marker-end="url(#dg2-arrow)"/>
+            <text x="711" y="50" text-anchor="middle" class="dg-text" font-size="9.5" fill="var(--ink-muted)">決済指図</text>
+
+            <!-- vertical arrows: front <-> middle -->
+            <line x1="180" y1="120" x2="180" y2="238" stroke="var(--ink-muted)" stroke-width="1.2" marker-end="url(#dg2-arrow)"/>
+            <text x="188" y="182" class="dg-text" font-size="9" fill="var(--ink-muted)">① 約定・残高を反映</text>
+            <line x1="262" y1="238" x2="262" y2="122" stroke="var(--ink-muted)" stroke-width="1.2" marker-end="url(#dg2-arrow)"/>
+            <text x="270" y="205" class="dg-text" font-size="9" fill="var(--ink-muted)">② リスク枠を監視</text>
+
+            <!-- vertical arrows: clearing/settlement <-> back -->
+            <line x1="605" y1="120" x2="605" y2="238" stroke="var(--ink-muted)" stroke-width="1.2" marker-end="url(#dg2-arrow)"/>
+            <text x="613" y="182" class="dg-text" font-size="9" fill="var(--ink-muted)">① 約定を照合</text>
+            <line x1="780" y1="238" x2="780" y2="122" stroke="var(--ink-muted)" stroke-width="1.2" marker-end="url(#dg2-arrow)"/>
+            <text x="772" y="205" text-anchor="end" class="dg-text" font-size="9" fill="var(--ink-muted)">② 決済を指図</text>
+
+            <!-- box: 投資家 -->
+            <rect x="20" y="60" width="90" height="60" rx="3" fill="var(--surface-alt)" stroke="var(--border)"/>
+            <text x="65" y="94" text-anchor="middle" class="dg-text" font-size="12" font-weight="700" fill="var(--ink)">投資家</text>
+
+            <!-- box: 発注(フロント) -->
+            <g style="--h:70">
+              <rect x="136" y="60" width="170" height="60" rx="3" fill="var(--surface)" stroke="var(--border)"/>
+              <rect x="136" y="60" width="4" height="60" fill="hsl(var(--h) var(--chip-bg-s) 44%)"/>
+              <text x="221" y="86" text-anchor="middle" class="dg-text" font-size="12" font-weight="700" fill="var(--ink)">発注（フロント）</text>
+              <text x="221" y="102" text-anchor="middle" class="dg-text" font-size="9.5" fill="var(--ink-muted)">OMS / EMS / SOR</text>
+            </g>
+
+            <!-- box: 取引所・PTS -->
+            <g style="--h:260">
+              <rect x="332" y="60" width="170" height="60" rx="3" fill="var(--surface)" stroke="var(--border)"/>
+              <rect x="332" y="60" width="4" height="60" fill="hsl(var(--h) var(--chip-bg-s) 44%)"/>
+              <text x="417" y="86" text-anchor="middle" class="dg-text" font-size="12" font-weight="700" fill="var(--ink)">取引所・PTS</text>
+              <text x="417" y="102" text-anchor="middle" class="dg-text" font-size="9.5" fill="var(--ink-muted)">マッチングエンジン</text>
+            </g>
+
+            <!-- box: 清算機関 -->
+            <g style="--h:150">
+              <rect x="528" y="60" width="170" height="60" rx="3" fill="var(--surface)" stroke="var(--border)"/>
+              <rect x="528" y="60" width="4" height="60" fill="hsl(var(--h) var(--chip-bg-s) 44%)"/>
+              <text x="613" y="86" text-anchor="middle" class="dg-text" font-size="12" font-weight="700" fill="var(--ink)">清算機関（JSCC）</text>
+              <text x="613" y="102" text-anchor="middle" class="dg-text" font-size="9.5" fill="var(--ink-muted)">ネッティング</text>
+            </g>
+
+            <!-- box: 決済 -->
+            <g style="--h:150">
+              <rect x="724" y="60" width="116" height="60" rx="3" fill="var(--surface)" stroke="var(--border)"/>
+              <rect x="724" y="60" width="4" height="60" fill="hsl(var(--h) var(--chip-bg-s) 44%)"/>
+              <text x="782" y="86" text-anchor="middle" class="dg-text" font-size="12" font-weight="700" fill="var(--ink)">決済</text>
+              <text x="782" y="102" text-anchor="middle" class="dg-text" font-size="9.5" fill="var(--ink-muted)">DVP・T+2</text>
+            </g>
+
+            <!-- box: ミドル -->
+            <g style="--h:290">
+              <rect x="136" y="240" width="170" height="60" rx="3" fill="var(--surface)" stroke="var(--border)"/>
+              <rect x="136" y="240" width="4" height="60" fill="hsl(var(--h) var(--chip-bg-s) 44%)"/>
+              <text x="221" y="266" text-anchor="middle" class="dg-text" font-size="12" font-weight="700" fill="var(--ink)">ミドル</text>
+              <text x="221" y="282" text-anchor="middle" class="dg-text" font-size="9.5" fill="var(--ink-muted)">リスク管理・ポジション・PL</text>
+            </g>
+
+            <!-- box: バック -->
+            <g style="--h:345">
+              <rect x="528" y="240" width="312" height="60" rx="3" fill="var(--surface)" stroke="var(--border)"/>
+              <rect x="528" y="240" width="4" height="60" fill="hsl(var(--h) var(--chip-bg-s) 44%)"/>
+              <text x="684" y="266" text-anchor="middle" class="dg-text" font-size="12" font-weight="700" fill="var(--ink)">バック</text>
+              <text x="684" y="282" text-anchor="middle" class="dg-text" font-size="9.5" fill="var(--ink-muted)">約定照合・決済指図・記帳</text>
+            </g>
+
+            <!-- legend -->
+            <g class="dg-text" font-size="10" fill="var(--ink-muted)">
+              <rect x="110" y="350" width="12" height="12" rx="2" fill="hsl(70 var(--chip-bg-s) 44%)"/>
+              <text x="128" y="360">フロント</text>
+              <rect x="230" y="350" width="12" height="12" rx="2" fill="hsl(290 var(--chip-bg-s) 44%)"/>
+              <text x="248" y="360">ミドル</text>
+              <rect x="340" y="350" width="12" height="12" rx="2" fill="hsl(345 var(--chip-bg-s) 44%)"/>
+              <text x="358" y="360">バック</text>
+              <rect x="450" y="350" width="12" height="12" rx="2" fill="hsl(150 var(--chip-bg-s) 44%)"/>
+              <text x="468" y="360">清算・決済</text>
+              <rect x="590" y="350" width="12" height="12" rx="2" fill="hsl(260 var(--chip-bg-s) 44%)"/>
+              <text x="608" y="360">市場制度・取引所</text>
+            </g>
+          </svg>
+          <figcaption>投資家からの注文はフロント（OMS/EMS/SOR）を通じて取引所やPTSに送られ、マッチングエンジンで売買が成立する。その間ミドルはフロントの残高とリスクをリアルタイムに監視し、約定後はバックが取引内容を照合したうえで清算機関（JSCC）と決済システムに指図を送る、という流れで一つの取引が処理される。</figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="search-row">
+        <input type="search" id="search" placeholder="用語・定義をキーワード検索…" aria-label="用語検索">
+        <button type="button" class="btn ghost small" id="addTermBtn">＋ 用語を追加</button>
+        <span class="count" id="count"></span>
+      </div>
+      <div class="cat-actions">
+        <button type="button" class="btn-link" id="selectAllCats">すべて選択</button>
+        <span class="sep">/</span>
+        <button type="button" class="btn-link" id="deselectAllCats">すべて解除</button>
+      </div>
+      <div class="chiprow" id="catFilter" role="group" aria-label="カテゴリで絞り込み"></div>
+    </div>
+    <div class="grid" id="grid"></div>
+    <div class="empty" id="empty" hidden>該当する用語が見つかりませんでした。</div>
+
+    <div class="refs">
+      <h2>参考文献</h2>
+      <ul>
+        <li>用語集 | 日本取引所グループ — https://www.jpx.co.jp/glossary/</li>
+        <li>証券用語解説集｜野村證券 — https://www.nomura.co.jp/terms/</li>
+        <li>自主規制関連用語集 | 日本証券業協会 — https://www.jsda.or.jp/shijyo/seido/jishukisei/words/</li>
+        <li>DVP決済 | 株式会社日本証券クリアリング機構 — https://www.jpx.co.jp/jscc/seisan/genbutsu/acceptance_debt/dvp.html</li>
+        <li>SORとは | マネックス証券 — https://info.monex.co.jp/help/stock/japan-trading/sor.html</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="panel" id="panelMarked" role="tabpanel" aria-labelledby="tabMarkedBtn" hidden>
+    <div class="marked-header">
+      <span class="count" id="markedCount"></span>
+      <button class="btn ghost" id="clearMarksBtn" type="button">すべて解除</button>
+    </div>
+    <div class="grid" id="markedGrid"></div>
+    <div class="empty" id="markedEmpty" hidden>まだマークした用語がありません。用語集の☆をクリックするとここに追加されます。</div>
+  </div>
+
+  <div class="panel" id="panelQuiz" role="tabpanel" aria-labelledby="tabQuizBtn" hidden>
+
+    <div id="quizSetup">
+      <div class="stat-line" id="cumulativeStat"></div>
+      <div class="quiz-setup">
+        <div class="setup-block">
+          <p class="field-label">出題カテゴリ</p>
+          <div class="chiprow" id="quizCatFilter"></div>
+        </div>
+        <div class="row2 setup-block">
+          <div>
+            <p class="field-label">出題数</p>
+            <select id="qCount">
+              <option value="5">5問</option>
+              <option value="10" selected>10問</option>
+              <option value="15">15問</option>
+              <option value="20">20問</option>
+            </select>
+          </div>
+          <div>
+            <p class="field-label">出題形式</p>
+            <select id="qMode">
+              <option value="mixed" selected>ランダム混在</option>
+              <option value="def2term">定義 → 用語を選ぶ</option>
+              <option value="term2def">用語 → 定義を選ぶ</option>
+            </select>
+          </div>
+        </div>
+        <p class="warn" id="setupWarn"></p>
+        <button class="btn" id="startBtn">クイズを開始</button>
+      </div>
+    </div>
+
+    <div id="quizActive" hidden>
+      <div class="quiz-head">
+        <span id="qPos"></span>
+        <span id="qScore"></span>
+      </div>
+      <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="q-card">
+        <div class="q-eyebrow">
+          <span class="tag" id="qTag" style="--h:40"></span>
+        </div>
+        <p class="q-prompt" id="qPrompt"></p>
+      </div>
+      <div class="options" id="qOptions"></div>
+      <div class="quiz-actions">
+        <button class="btn" id="nextBtn" disabled>次の問題へ</button>
+      </div>
+    </div>
+
+    <div id="quizResult" hidden>
+      <p class="field-label">結果</p>
+      <div class="result-score" id="resultScore"></div>
+      <p class="result-rate" id="resultRate"></p>
+      <div class="missed" id="missedList"></div>
+      <div class="result-actions">
+        <button class="btn" id="retryBtn">同じ設定でもう一度</button>
+        <button class="btn ghost" id="backBtn">設定に戻る</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="backup-bar">
+    <p class="backup-note">マーク・クイズ成績・追加した用語は、このブラウザにのみ保存されます。ブラウザの設定などにより保存内容が消えることがあるため、定期的にバックアップの保存をおすすめします。</p>
+    <div class="backup-actions">
+      <button type="button" class="btn ghost small" id="backupSaveBtn">バックアップを保存</button>
+      <button type="button" class="btn ghost small" id="backupLoadBtn">バックアップから復元</button>
+      <input type="file" id="backupFileInput" accept="application/json,.json" hidden>
+    </div>
+  </div>
+
+  <footer>市場系システムエンジニア向け学習ツール ・ 全 <span id="totalCount"></span> 語収録</footer>
+</div>
+
+<div class="modal-overlay" id="termModalOverlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="termModalTitle">
+    <h2 id="termModalTitle">用語を追加</h2>
+    <div class="modal-field">
+      <label for="tmTerm">用語</label>
+      <input type="text" id="tmTerm" placeholder="例：呼値">
+    </div>
+    <div class="modal-field">
+      <label for="tmKana">ふりがな</label>
+      <input type="text" id="tmKana" placeholder="例：よびね">
+    </div>
+    <div class="modal-field">
+      <label for="tmCat">カテゴリ</label>
+      <select id="tmCat"></select>
+    </div>
+    <div class="modal-field">
+      <label for="tmDef">定義</label>
+      <textarea id="tmDef" rows="4" placeholder="この用語の説明を入力してください"></textarea>
+    </div>
+    <p class="modal-warn" id="tmWarn"></p>
+    <div class="modal-actions">
+      <button type="button" class="btn ghost" id="tmDeleteBtn" hidden>削除</button>
+      <div class="modal-actions-right">
+        <button type="button" class="btn ghost" id="tmCancelBtn">キャンセル</button>
+        <button type="button" class="btn" id="tmSaveBtn">保存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="confirmOverlay" hidden>
+  <div class="modal modal-confirm" role="alertdialog" aria-modal="true" aria-describedby="confirmMessage">
+    <p class="confirm-message" id="confirmMessage"></p>
+    <div class="modal-actions">
+      <button type="button" class="btn ghost" id="confirmCancelBtn">キャンセル</button>
+      <div class="modal-actions-right">
+        <button type="button" class="btn" id="confirmOkBtn">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var CATS = {
+    board:      { label:"取引・板情報", hue:200 },
+    order:      { label:"注文・執行",   hue:95  },
+    market:     { label:"市場制度・取引所", hue:260 },
+    clearing:   { label:"清算・決済",   hue:150 },
+    derivative: { label:"デリバティブ", hue:320 },
+    tech:       { label:"システム・技術", hue:230 },
+    compliance: { label:"規制・コンプライアンス", hue:15 },
+    front:      { label:"フロント",   hue:70  },
+    middle:     { label:"ミドル",     hue:290 },
+    back:       { label:"バック",     hue:345 },
+    fx:         { label:"為替取引（FX）", hue:125 },
+    bond:       { label:"債券・マネーマーケット", hue:175 }
+  };
+
+  var BUILTIN_GLOSSARY = [
+    {t:"板",k:"いた",c:"board",d:"取引所において、銘柄ごとの買い注文・売り注文の値段と数量を、値段順に並べて一覧表示したもの。需給の状況を把握する基本情報。"},
+    {t:"気配",k:"けはい",c:"board",d:"ある銘柄について現在提示されている売買注文の値段のこと。未約定の呼びかけの状態を指し、実際に売買が成立した約定値段とは区別される。"},
+    {t:"呼値",k:"よびね",c:"board",d:"売買注文を出す際に用いる価格の単位のこと。刻み幅は株価水準や銘柄によって取引所が定めており、価格はこの単位の倍数でしか提示できない。"},
+    {t:"ザラ場",k:"ざらば",c:"board",d:"寄付から引けまでの間、板の状況に応じて注文が随時付き合わされ、値段が連続的に決まっていく取引時間帯のこと。"},
+    {t:"板寄せ",k:"いたよせ",c:"board",d:"寄付・引けなどにおいて、その時点までの売買注文をすべて集約し、最も多くの注文が成立する単一の価格を算出して一括約定させる価格決定方式。"},
+    {t:"寄付",k:"よりつき",c:"board",d:"その日または時間帯の最初の売買が成立すること、またはその値段のこと。板寄せ方式で決定される。"},
+    {t:"引け",k:"ひけ",c:"board",d:"その日または時間帯の最後の売買が成立すること、またはその値段のこと。板寄せ方式で決定される。"},
+    {t:"特別気配",k:"とくべつけはい",c:"board",d:"買いと売りの注文数量が大きく偏り、直近の約定値段から一定以上値が乖離しそうな場合に、取引所が売買を一時止めて提示する気配のこと。"},
+    {t:"ストップ高",k:"すとっぷだか",c:"board",d:"値幅制限の上限まで株価が上昇した状態のこと。この値段を超える価格では約定が成立しない。"},
+    {t:"ストップ安",k:"すとっぷやす",c:"board",d:"値幅制限の下限まで株価が下落した状態のこと。この値段を下回る価格では約定が成立しない。"},
+    {t:"制限値幅",k:"せいげんねはば",c:"board",d:"1日の株価変動の上限・下限を定めた仕組みのこと。過度な株価変動を防ぐため取引所が銘柄ごとに設定する。"},
+    {t:"出来高",k:"できだか",c:"board",d:"一定期間内に売買が成立した株数のこと。市場の活況度や流動性を示す指標として用いられる。"},
+    {t:"歩み値",k:"あゆみね",c:"board",d:"個別銘柄について、約定した時刻・値段・数量を時系列に記録した情報のこと。ティックデータとも呼ばれる。"},
+
+    {t:"成行注文",k:"なりゆきちゅうもん",c:"order",d:"値段を指定せず、その時点で成立可能な最良の価格で売買を成立させる注文方法。約定は優先されるが想定外の価格になるリスクがある。"},
+    {t:"指値注文",k:"さしねちゅうもん",c:"order",d:"「いくら以下で買う」「いくら以上で売る」のように値段を指定して出す注文方法。指定した値段より不利な価格では約定しない。"},
+    {t:"逆指値注文",k:"ぎゃくさしねちゅうもん",c:"order",d:"あらかじめ定めた値段まで株価が動いたことをきっかけに、成行または指値の注文を自動的に発注する注文方法。"},
+    {t:"IOC",k:"アイオーシー",c:"order",d:"注文を出した直後に約定可能な数量だけ即座に約定させ、残りは自動的に取り消す執行条件（Immediate or Cancel）のこと。"},
+    {t:"FOK",k:"エフオーケー",c:"order",d:"注文数量の全量が即座に約定しない場合は、注文全体を取り消す執行条件（Fill or Kill）のこと。"},
+    {t:"SOR注文",k:"エスオーアールちゅうもん",c:"order",d:"複数の取引市場（取引所やPTSなど）の気配を比較し、最良の価格で約定できる市場をシステムが自動的に判定して発注する仕組み。"},
+    {t:"アルゴリズム取引",k:"あるごりずむとりひき",c:"order",d:"あらかじめ定めたルールやモデルに従い、コンピュータが自動的に注文の発注・執行・管理を行う取引手法の総称。"},
+    {t:"VWAP",k:"ブイワップ",c:"order",d:"一定期間の売買代金合計を出来高合計で割った出来高加重平均価格。この価格に近づけて約定させる執行アルゴリズムの基準にも使われる。"},
+    {t:"TWAP",k:"ティーワップ",c:"order",d:"一定期間を均等な時間間隔に分割し、各時点の価格を単純平均した時間加重平均価格。注文を時間的に均等分割して発注する基準に使われる。"},
+    {t:"HFT（高頻度取引）",k:"エイチエフティー",c:"order",d:"高性能なコンピュータシステムを用いて、ミリ秒・マイクロ秒単位の短時間で大量の注文発注・取消を繰り返す取引手法。"},
+    {t:"ダークプール",k:"だーくぷーる",c:"order",d:"気配情報を公開せずに売買を執行する私設の取引システムのこと。大口注文を市場価格に影響を与えず執行したい投資家に利用される。"},
+    {t:"マーケットメイカー",k:"まーけっとめいかー",c:"order",d:"特定の銘柄について常に買い気配と売り気配の両方を提示し、市場に流動性を供給する市場参加者のこと。"},
+    {t:"スリッページ",k:"すりっぺーじ",c:"order",d:"発注時に想定していた価格と、実際に約定した価格との差（ずれ）のこと。相場急変時や流動性が低い場面で生じやすい。"},
+    {t:"レイテンシ",k:"れいてんし",c:"order",d:"注文の発注から取引所での処理・約定通知の受信までにかかる時間差のこと。市場系システムではこれを低く抑えることが重要な性能要件となる。"},
+    {t:"現物取引",k:"げんぶつとりひき",c:"order",d:"投資家が資金や証券の全額を用意して行う、通常の売買取引のこと。信用取引と対比される。"},
+    {t:"信用取引",k:"しんようとりひき",c:"order",d:"証券会社から資金や株式を借り入れ、担保となる保証金を差し入れて行う、レバレッジを伴う取引のこと。"},
+
+    {t:"PTS（私設取引システム）",k:"ピーティーエス",c:"market",d:"証券取引所を介さずに、証券会社等が運営する電子取引システムで株式などを売買する仕組み。取引所の時間外でも利用できる場合がある。"},
+    {t:"TOPIX",k:"トピックス",c:"market",d:"東京証券取引所プライム市場等に上場する内国普通株式全銘柄を対象とした、時価総額加重型の株価指数のこと。"},
+    {t:"サーキットブレーカー",k:"さーきっとぶれーかー",c:"market",d:"株価や先物価格が一定幅以上急激に変動した場合に、取引を一時的に停止する仕組みのこと。過熱した相場を落ち着かせる目的がある。"},
+    {t:"増担保規制",k:"ましたんぽきせい",c:"market",d:"信用取引が過度に集中した銘柄について、取引所が委託保証金の率を引き上げるなどして過熱を抑制する規制のこと。"},
+    {t:"空売り規制",k:"からうりきせい",c:"market",d:"直近の株価より高い値段でしか空売り注文を出せないようにするなど、株価の急落を助長しないための価格規制のこと。"},
+    {t:"立会外取引",k:"たちあいがいとりひき",c:"market",d:"取引所の通常の売買立会時間外、または板を介さずに行われる取引の総称。ToSTNeTなどが代表例。"},
+    {t:"売買停止",k:"ばいばいていし",c:"market",d:"重要情報の開示や需給の急変などを理由に、取引所が特定銘柄の売買を一時的に止める措置のこと。"},
+
+    {t:"清算機関（JSCC）",k:"せいさんきかん",c:"clearing",d:"取引の相手方となって債務を引き受け、多数の参加者間の債権債務をネッティングして決済の履行を保証する機関。日本証券クリアリング機構が代表例。"},
+    {t:"DVP決済",k:"ディーブイピーけっさい",c:"clearing",d:"証券の引渡しと資金の支払いを相互に条件づけて行う決済方式。一方が履行されない限りもう一方も実行されず、決済リスクを低減できる。"},
+    {t:"ほふり（証券保管振替機構）",k:"ほふり",c:"clearing",d:"上場株式などの振替決済、すなわち帳簿上の記録による権利移転を行う証券決済インフラを担う機関のこと。"},
+    {t:"T+2（受渡日）",k:"ティープラスに",c:"clearing",d:"約定日（T）から起算して2営業日後に証券の引渡しと代金の受け渡しが行われる決済サイクルのこと。日本株の普通取引で採用されている。"},
+    {t:"フェイル",k:"ふぇいる",c:"clearing",d:"決済期日までに証券や資金の受け渡しが完了しない状態のこと。"},
+    {t:"ネッティング",k:"ねってぃんぐ",c:"clearing",d:"複数の取引で発生した債権・債務を相殺し、決済すべき金額や数量を圧縮する処理のこと。清算機関の重要な機能の一つ。"},
+
+    {t:"先物取引",k:"さきものとりひき",c:"derivative",d:"あらかじめ定めた将来の期日に、特定の資産をあらかじめ定めた価格で売買することを約束する取引のこと。"},
+    {t:"オプション取引",k:"おぷしょんとりひき",c:"derivative",d:"将来の一定期日または期間内に、あらかじめ定めた権利行使価格で原資産を売買する権利を売買する取引のこと。"},
+    {t:"証拠金",k:"しょうこきん",c:"derivative",d:"先物・オプション取引などにおいて、決済不履行に備えて取引参加者が担保として預け入れる金銭のこと。"},
+    {t:"SPAN証拠金",k:"スパンしょうこきん",c:"derivative",d:"ポートフォリオ全体のリスクに基づいて証拠金額を計算する方式のこと。シカゴ・マーカンタイル取引所が開発し、日本のデリバティブ清算でも採用されている。"},
+    {t:"マージンコール",k:"まーじんこーる",c:"derivative",d:"差し入れている担保の価値が市場変動などにより必要額を下回った場合に、追加の担保や資金の差し入れを求められること。"},
+    {t:"ヘアカット",k:"へあかっと",c:"derivative",d:"担保として差し入れる資産を評価する際に、その市場価格からあらかじめ一定の割合を差し引いて掛け目を設定する仕組みのこと。価格変動リスクに備えるための安全余裕として機能する。"},
+    {t:"限月",k:"げんげつ",c:"derivative",d:"先物・オプション取引において、契約の決済（満期）が行われる月のこと。"},
+    {t:"金利スワップ（IRS）",k:"きんりすわっぷ",c:"derivative",d:"想定元本に基づき、固定金利と変動金利のキャッシュフローを一定期間交換する取引のこと。元本そのものの交換は行わない。"},
+    {t:"通貨スワップ（CCS）",k:"つうかすわっぷ",c:"derivative",d:"異なる通貨建ての元本・金利を一定期間交換する取引のこと。満期時に元本を再交換する点が金利スワップと異なる。"},
+    {t:"CDS（クレジット・デフォルト・スワップ）",k:"シーディーエス",c:"derivative",d:"参照企業の信用リスクを対象に、保証料を支払う代わりに、デフォルトなどの信用事由が発生した際に補償を受け取る取引のこと。"},
+    {t:"スワップション",k:"すわっぷしょん",c:"derivative",d:"将来の一定時点で金利スワップを開始する権利を売買するオプション取引のこと。"},
+    {t:"想定元本",k:"そうていがんぽん",c:"derivative",d:"スワップ取引において、金利や損益の計算基準として用いられるが、実際には受け渡しされない元本額のこと。"},
+    {t:"コールオプション",k:"こーるおぷしょん",c:"derivative",d:"将来の一定期日に、あらかじめ定めた価格（権利行使価格）で原資産を買う権利のこと。"},
+    {t:"プットオプション",k:"ぷっとおぷしょん",c:"derivative",d:"将来の一定期日に、あらかじめ定めた価格（権利行使価格）で原資産を売る権利のこと。"},
+    {t:"オプション料（プレミアム）",k:"おぷしょんりょう",c:"derivative",d:"オプションを購入する際に、買い手が売り手に対して支払う対価のこと。"},
+    {t:"先物オプション",k:"さきものおぷしょん",c:"derivative",d:"先物取引を原資産とするオプション取引のこと。権利行使により、先物の買い方または売り方のポジションを取得する。"},
+    {t:"ITM（イン・ザ・マネー）",k:"アイティーエム",c:"derivative",d:"権利行使価格と原資産価格の関係において、権利を行使すれば利益が出る状態のこと。"},
+    {t:"OTM（アウト・オブ・ザ・マネー）",k:"オーティーエム",c:"derivative",d:"権利行使価格と原資産価格の関係において、権利を行使しても利益が出ない状態のこと。"},
+    {t:"ボラティリティ",k:"ぼらてぃりてぃ",c:"derivative",d:"原資産価格の変動の大きさを示す指標のこと。オプション価格を左右する重要な変数の一つ。"},
+
+    {t:"FIXプロトコル",k:"フィックスぷろとこる",c:"tech",d:"証券取引における注文・約定などの情報を電子的にやり取りするために策定された、業界標準の通信プロトコルのこと（Financial Information eXchange）。"},
+    {t:"マッチングエンジン",k:"まっちんぐえんじん",c:"tech",d:"取引所やPTSなどにおいて、買い注文と売り注文を価格・時間優先の原則等に基づき突き合わせ、約定を成立させるシステムの中核部分のこと。"},
+    {t:"ティックサイズ",k:"てぃっくさいず",c:"tech",d:"呼値の刻み幅そのものを指すシステム・市場設計上の用語。刻み幅が細かいほど価格の粒度は高くなるが、板の厚みは薄くなりやすい。"},
+    {t:"キルスイッチ",k:"きるすいっち",c:"tech",d:"アルゴリズム取引などで異常な発注が続いた場合に、取引参加者や取引所が注文の発注を強制的に停止させる緊急停止機能のこと。"},
+
+    {t:"インサイダー取引",k:"いんさいだーとりひき",c:"compliance",d:"上場会社の関係者等が、投資判断に重要な影響を与える未公表の重要事実を知りながら、その公表前に当該会社の株式等を売買する行為。金融商品取引法で禁止される。"},
+    {t:"内部管理責任者",k:"ないぶかんりせきにんしゃ",c:"compliance",d:"証券会社の営業部門において、法令遵守や顧客保護の観点から営業活動を管理・監督する責任者のこと。"},
+    {t:"外務員資格",k:"がいむいんしかく",c:"compliance",d:"証券会社等の役職員が、顧客に対して有価証券の売買の勧誘や説明を行うために必要な資格のこと。日本証券業協会が試験を実施する。"},
+    {t:"適合性の原則",k:"てきごうせいのげんそく",c:"compliance",d:"顧客の知識・経験・財産状況・投資目的等に照らして不適切な勧誘を行ってはならないという、金融商品取引業者に課された行為規制の原則のこと。"},
+    {t:"バーゼル規制（バーゼルI/II/III）",k:"ばーぜるきせい",c:"compliance",d:"銀行の健全性を確保するため、バーゼル銀行監督委員会が定める国際的な自己資本規制の枠組みのこと。I→II→IIIと段階的に強化されてきた。"},
+    {t:"バーゼルIII最終化",k:"ばーぜるさんさいしゅうか",c:"compliance",d:"リスクアセットの計算における内部モデル使用の制約強化（出力フロアの導入）などを含む、バーゼルIIIの改訂内容のこと。2017年に大枠が国際合意された。"},
+    {t:"自己資本比率",k:"じこしほんひりつ",c:"compliance",d:"銀行が保有するリスクアセットに対して、どれだけの自己資本を有しているかを示す比率のこと。バーゼル規制における中心的な指標。"},
+    {t:"リスクアセット（RWA）",k:"りすくあせっと",c:"compliance",d:"保有する資産をその信用リスクなどに応じて重み付けして算出した金額のこと。自己資本比率を計算する際の分母となる。"},
+    {t:"リスクウェイト",k:"りすくうぇいと",c:"compliance",d:"リスクアセットを算出する際に、資産の種類やリスクの大きさに応じて設定される重み（掛け目）のこと。"},
+    {t:"Tier1（基本的項目）",k:"てぃあわん",c:"compliance",d:"銀行の自己資本のうち、普通株式や内部留保など、損失吸収力が最も高い中核的な資本のこと。"},
+    {t:"普通株式等Tier1（CET1）",k:"シーイーティーワン",c:"compliance",d:"Tier1のうち、普通株式や内部留保などで構成される、最も損失吸収力の高い中核的な資本のこと。"},
+    {t:"その他Tier1（AT1）",k:"エーティーワン",c:"compliance",d:"Tier1のうち、CET1以外の資本のこと。一定の条件（トリガー）に達すると株式化・元本削減されるCoCo債などが含まれる。"},
+    {t:"CoCo債（偶発転換社債）",k:"ここさい",c:"compliance",d:"発行体の自己資本比率が一定水準を下回るなど、あらかじめ定めた条件（トリガー）に達すると、株式に転換されたり元本が削減されたりする債券のこと。"},
+    {t:"Tier2資本（補完的項目）",k:"てぃあつー",c:"compliance",d:"銀行の自己資本のうち、Tier1を補完する資本のこと。劣後債などが含まれる。"},
+    {t:"ハイブリッド証券",k:"はいぶりっどしょうけん",c:"compliance",d:"債券と株式の両方の性質を併せ持つ証券のこと。劣後性や利払い繰延条項などが付されることが多い。"},
+    {t:"サープラスノート",k:"さーぷらすのーと",c:"compliance",d:"保険会社などが発行する、保険契約者への支払いに劣後する無担保の負債性資本調達手段のこと。規制上、資本として扱われる。"},
+    {t:"ソルベンシーマージン比率規制",k:"そるべんしーまーじんひりつきせい",c:"compliance",d:"保険会社が保険金支払いなどのリスクに対して、どれだけの余力（ソルベンシーマージン）を有しているかを示す、日本の現行の保険規制のこと。"},
+    {t:"経済価値ベースのソルベンシー規制（ESR）",k:"イーエスアール",c:"compliance",d:"資産・負債を市場整合的な経済価値で評価し、リスクに応じた資本十分性を判定する保険会社向けの新しいソルベンシー規制のこと。日本では全保険会社に統一的に導入される。"},
+    {t:"ICS基準（保険資本基準）",k:"アイシーエス",c:"compliance",d:"国際的に活動する保険グループを対象に、保険監督者国際機構（IAIS）が策定した資本十分性の国際的な基準のこと。"},
+
+    {t:"フロントオフィス",k:"ふろんとおふぃす",c:"front",d:"顧客対応やディーリング、市場への発注など、取引の入口を担う業務・システムの総称。トレーディングシステムや発注システムが含まれる。"},
+    {t:"OMS（発注管理システム）",k:"オーエムエス",c:"front",d:"トレーダーやアルゴリズムからの注文を集約し、内容を管理したうえで取引所やPTSへ送信するシステムのこと（Order Management System）。"},
+    {t:"EMS（執行管理システム）",k:"イーエムエス",c:"front",d:"複数の市場への発注ルーティングや執行アルゴリズムの実行など、注文の執行そのものに特化したシステムのこと（Execution Management System）。OMSと連携して使われることが多い。"},
+    {t:"ディーリングシステム",k:"でぃーりんぐしすてむ",c:"front",d:"自己勘定取引（ディーリング）を行うトレーダーが、価格情報の閲覧や発注のために利用するフロントオフィス向けシステムのこと。"},
+    {t:"マーケットデータ配信",k:"まーけっとでーたはいしん",c:"front",d:"取引所等から配信される株価・気配情報をリアルタイムに受信し、社内の各システムへ配信する仕組みのこと。フロント業務の基盤となる。"},
+
+    {t:"ミドルオフィス",k:"みどるおふぃす",c:"middle",d:"フロントで行われた取引のリスク管理やポジション管理、損益計算など、取引の健全性を管理する業務・システムの総称。"},
+    {t:"リスク管理システム",k:"りすくかんりしすてむ",c:"middle",d:"保有ポジションから生じる市場リスクや取引相手の与信リスクなどを計測・モニタリングするシステムのこと。"},
+    {t:"ポジション管理",k:"ぽじしょんかんり",c:"middle",d:"保有している有価証券やデリバティブの残高（ポジション）を、取引の発生に応じて正確に把握・管理すること。"},
+    {t:"損益計算（PL）",k:"そんえきけいさん",c:"middle",d:"保有ポジションや当日の取引から生じる損益を、日次またはリアルタイムで計算する業務のこと。ミドルオフィスの主要な機能の一つ。"},
+    {t:"リミット管理",k:"りみっとかんり",c:"middle",d:"トレーダーや部署ごとに設定された取引可能枠（リミット）の消化状況を監視し、超過時には発注を制限する仕組みのこと。"},
+
+    {t:"バックオフィス",k:"ばっくおふぃす",c:"back",d:"約定した取引の照合、決済、帳簿記帳など、取引成立後の後処理を担う業務・システムの総称。"},
+    {t:"約定照合（コンファメーション）",k:"やくじょうしょうごう",c:"back",d:"取引の相手方との間で、銘柄・数量・価格などの約定内容が一致しているかを確認する処理のこと。"},
+    {t:"決済指図",k:"けっさいさしず",c:"back",d:"約定した取引について、証券や資金の受け渡しを行うよう清算機関や決済機関に対して行う指示のこと。"},
+    {t:"帳簿記帳",k:"ちょうぼきちょう",c:"back",d:"約定・決済が完了した取引の内容を、会計帳簿や取引台帳に記録すること。"},
+    {t:"STP（ストレート・スルー・プロセッシング）",k:"エスティーピー",c:"back",d:"注文の発注から約定、照合、決済までの一連の処理を、人手を介さず一貫して電子的に処理する仕組みのこと（Straight-Through Processing）。"},
+
+    {t:"FXスポット（直物為替）",k:"エフエックススポット",c:"fx",d:"約定から通常2営業日後に通貨の受け渡しを行う、最も基本的な為替取引のこと。"},
+    {t:"FXフォワード（先物為替）",k:"エフエックスフォワード",c:"fx",d:"将来のあらかじめ定めた期日に、あらかじめ定めた為替レートで通貨を交換することを約束する為替取引のこと。"},
+    {t:"FXスワップ",k:"エフエックススワップ",c:"fx",d:"直物取引と先物取引（または期日の異なる先物同士）を組み合わせ、通貨を一時的に交換して期日に反対売買する取引のこと。資金調達やヘッジに用いられる。"},
+    {t:"NDF（ノン・デリバラブル・フォワード）",k:"エヌディーエフ",c:"fx",d:"満期時に元本の受け渡しを行わず、約定レートと満期時レートとの差額のみを決済する差金決済型の先物為替取引のこと。取引規制のある通貨などで用いられる。"},
+    {t:"仲値（TTM）",k:"なかね",c:"fx",d:"銀行が毎営業日に公表する、その日の対顧客取引の基準となる為替レートのこと。"},
+    {t:"pip（ピップ）",k:"ぴっぷ",c:"fx",d:"為替レートの最小変動単位のこと。多くの通貨ペアでは、これは小数点以下4桁目（0.0001）に相当する。"},
+    {t:"バリューデート（受渡日）",k:"ばりゅーでーと",c:"fx",d:"為替取引において、実際に通貨の受け渡しが行われる日のこと。"},
+    {t:"クロスカレンシー",k:"くろすかれんしー",c:"fx",d:"米ドルを介さない、米ドル以外の2通貨間の為替取引・為替レートのこと。"},
+    {t:"クロスカレンシー・ベーシス",k:"くろすかれんしーべーしす",c:"fx",d:"為替スワップの取引条件において、両通貨の単純な金利差だけでは説明できない上乗せ（または割引）分のコストのこと。通貨ごとの資金需給の偏りなどによって生じる。"},
+
+    {t:"債券",k:"さいけん",c:"bond",d:"国や企業などの発行体が投資家から資金を借り入れる際に発行する有価証券のこと。額面金額・利率・満期があらかじめ定められている。"},
+    {t:"利回り",k:"りまわり",c:"bond",d:"債券投資額に対する年間収益の割合のこと。債券価格が下がるとこの値は上がる、という逆相関の関係にある。"},
+    {t:"経過利子",k:"けいかりし",c:"bond",d:"前回の利払日から売買の受渡日までの期間に発生した利子のこと。債券の売買時に買い手が売り手に支払う。"},
+    {t:"現先取引（レポ取引）",k:"げんさきとりひき",c:"bond",d:"一定期間後にあらかじめ定めた価格で買い戻す（または売り戻す）ことを条件に債券を売買する取引のこと。資金の調達・運用の手段として用いられる。"},
+    {t:"イールドカーブ",k:"いーるどかーぶ",c:"bond",d:"残存期間の異なる債券の利回りを、期間を横軸にとって結んだ曲線のこと。金利の期間構造を表す。"},
+    {t:"デュレーション",k:"でゅれーしょん",c:"bond",d:"金利の変動に対する債券価格の感応度を示す指標のこと。値が大きいほど金利変動の影響を受けやすい。"},
+    {t:"国債先物",k:"こくさいさきもの",c:"bond",d:"国債を対象とする先物取引のこと。将来の一定期日に、あらかじめ定めた価格で国債を売買することを約束する。"},
+    {t:"国債（JGB）",k:"こくさい",c:"bond",d:"自国の政府が発行する債券のこと。日本ではJGBと呼ばれ、財政運営のための主要な資金調達手段であるとともに、レポなどの取引における担保としても広く用いられる。"},
+    {t:"格付け",k:"かくづけ",c:"bond",d:"発行体や個別の債券について、元利金の支払い能力を第三者機関が評価し、記号等で示したもののこと。"},
+    {t:"コールローン",k:"こーるろーん",c:"bond",d:"金融機関同士が、ごく短期間（主に翌日物）で行う資金の貸し借りを、貸し手側から見た呼び方のこと。"},
+    {t:"コールマネー",k:"こーるまねー",c:"bond",d:"金融機関同士が、ごく短期間（主に翌日物）で行う資金の貸し借りを、借り手側から見た呼び方のこと。"},
+    {t:"無担保コール",k:"むたんぽこーる",c:"bond",d:"担保を取らずに行う、金融機関同士の短期資金の貸し借りのこと。そのオーバーナイト物レートは、日本銀行の政策金利の指標としても用いられる。"},
+    {t:"CP（コマーシャルペーパー）",k:"シーピー",c:"bond",d:"企業が短期の資金調達のために発行する、無担保の約束手形のこと。"},
+    {t:"CD（譲渡性預金）",k:"シーディー",c:"bond",d:"第三者への譲渡が可能な、金融機関が発行する預金証書のこと。"},
+    {t:"国庫短期証券（T-Bill）",k:"こっこたんきしょうけん",c:"bond",d:"国が短期の資金調達のために発行する、1年以内に償還される国債のこと。"},
+    {t:"GCレポ",k:"じーしーれぽ",c:"bond",d:"現先取引（レポ取引）のうち、担保となる債券の種類を特定せずに行う取引のこと。"},
+    {t:"SCレポ",k:"えすしーれぽ",c:"bond",d:"現先取引（レポ取引）のうち、担保となる特定の銘柄を指定して行う取引のこと。"},
+    {t:"クロスカレンシー・レポ",k:"くろすかれんしーれぽ",c:"bond",d:"自国の国債などを担保として差し入れ、外国通貨の資金を調達する仕組みの取引のこと。現金を交換する為替スワップと似た経済効果を持つが、担保として債券を用いる点が異なる。"},
+    {t:"コラテラル・スワップ",k:"こらてらるすわっぷ",c:"bond",d:"信用力や流動性の異なる複数の証券を、一定期間にわたって互いに担保として交換する取引のこと。受け取った証券を、別の資金調達取引の担保として再利用できる場合がある。"},
+    {t:"社債",k:"しゃさい",c:"bond",d:"事業会社が資金調達のために発行する債券のこと。"},
+    {t:"クーポン利率",k:"くーぽんりりつ",c:"bond",d:"債券の額面金額に対して毎期支払われる利息の割合のこと。発行時に固定される利率を指すことが多い。"},
+    {t:"投資適格（債）",k:"とうしてきかく",c:"bond",d:"格付機関による信用格付けが一定水準以上（目安としてBBB-／Baa3以上）の債券のこと。デフォルトリスクが相対的に低いとされる。"},
+    {t:"投機的格付け（ジャンク債）",k:"とうきてきかくづけ",c:"bond",d:"信用格付けが投資適格の水準に満たない債券のこと。高い利回りが期待できる一方、デフォルトリスクも相対的に高い。"},
+    {t:"シニア債",k:"しにあさい",c:"bond",d:"発行体が破綻した場合の弁済順位が高い（優先される）債券のこと。"},
+    {t:"劣後債",k:"れつごさい",c:"bond",d:"発行体が破綻した場合の弁済順位が、シニア債など他の債務より低い債券のこと。リスクが高い分、利率も高く設定される。"},
+    {t:"ノッチ",k:"のっち",c:"bond",d:"信用格付けの同一等級内での相対的な位置、またはその1段階分の違いを表す単位のこと。格付けを1段階上げる、下げるといった変更幅を表現する際に用いられる。"},
+    {t:"コーラブル債（期限前償還条項）",k:"こーらぶるさい",c:"bond",d:"発行体が、あらかじめ定めた特定日に投資家から債券を買い戻し、繰上償還できる権利（条項）が付いた債券のこと。償還リスクを負う分、通常より高い利率が設定される。"},
+    {t:"30NC10",k:"さんじゅうねんえぬしーてん",c:"bond",d:"「30年債で、発行から最初の10年間は発行体による早期償還（コール）ができない」という条件を表す表記のこと。満期年数とコール禁止期間を組み合わせて示す。"},
+    {t:"クロスオーバー銘柄",k:"くろすおーばーめいがら",c:"bond",d:"格付機関によって投資適格と投機的格付けの評価が分かれるなど、両者の境界に位置する銘柄のこと。"},
+    {t:"利払い繰延条項",k:"りばらいくりのべじょうこう",c:"bond",d:"発行体が一定の条件下で利払いを延期できる条項のこと。劣後債やハイブリッド証券などに付されることが多い。"},
+    {t:"ソブリン債",k:"そぶりんさい",c:"bond",d:"国が発行する債券のこと。"},
+    {t:"準ソブリン債",k:"じゅんそぶりんさい",c:"bond",d:"国が実質的に保証・支援する政府系機関や国有企業などが発行する債券のこと。ソブリン債に準じた信用力を持つとされる。"},
+    {t:"格付機関（信用格付会社）",k:"かくづけきかん",c:"bond",d:"発行体や個別債券の信用力を評価し、記号で示す第三者機関のこと。国際的にはS&P・Moody's・Fitchの3社が大手として知られ、日本ではJCR（日本格付研究所）やR&I（格付投資情報センター）などがある。"},
+
+    {t:"TARF（ターゲット・レデンプション・フォワード）",k:"たーふ",c:"derivative",d:"為替のエキゾチック・デリバティブの一種。複数回の先物取引を組み合わせ、あらかじめ定めた累積の利益目標（ターゲット）に達すると契約が早期に終了（ノックアウト）する仕組みの取引のこと。利益は限定される一方、損失が拡大しやすい非対称なリスクを持つ。"},
+    {t:"TARN（ターゲット・リデンプション・ノート）",k:"たーん",c:"derivative",d:"金利のエキゾチック・デリバティブが組み込まれた仕組み債の一種。受け取るクーポンの累積額があらかじめ定めたターゲットに達すると、早期に償還（ノックアウト）される仕組みの債券のこと。"},
+    {t:"オートコーラブル（自動早期償還条項付債券）",k:"おーとこーらぶる",c:"derivative",d:"参照する株価指数や個別株などが、あらかじめ定めた観察日に一定の水準以上であれば、あらかじめ定めたクーポンを支払って早期に償還される仕組み債のこと。"},
+    {t:"ノックイン",k:"のっくいん",c:"derivative",d:"原資産の価格があらかじめ定めた水準（バリア）に達することで、オプションや仕組み債の権利・効力が新たに発生する仕組みのこと。"},
+    {t:"ノックアウト",k:"のっくあうと",c:"derivative",d:"原資産の価格があらかじめ定めた水準（バリア）に達することで、オプションや仕組み債の権利・効力が消滅する仕組みのこと。"},
+    {t:"バリアオプション",k:"ばりあおぷしょん",c:"derivative",d:"原資産価格が一定の水準（バリア）に達するかどうかによって権利の発生・消滅が決まる、ノックイン・ノックアウトの仕組みを持つオプションのこと。"},
+    {t:"CMSレート",k:"シーエムエスれーと",c:"derivative",d:"ある一定の残存期間（例：10年）の金利スワップレートを、その時点の市場から観測した参照金利のこと。CMSスワップや、これに連動する仕組み債などの参照指標として用いられる。"},
+    {t:"CMSスワップ",k:"シーエムエススワップ",c:"derivative",d:"短期金利（TIBORなど）ではなく、CMSレートを参照して金利を交換する金利スワップのこと。"}
+  ];
+  BUILTIN_GLOSSARY.forEach(function(g, i){ g.id = "b" + i; });
+
+  /* ---------- glossary data: built-in + user-added, minus edits/deletions ---------- */
+  function generateTermId(){
+    return "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  }
+  var GLOSSARY = [];
+  function rebuildGlossary(){
+    var customTerms = safeGet("mtq_custom") || [];
+    var editsMap = safeGet("mtq_edits") || {};
+    var deletedIds = new Set(safeGet("mtq_deleted") || []);
+    var merged = BUILTIN_GLOSSARY.concat(customTerms)
+      .filter(function(g){ return !deletedIds.has(g.id); })
+      .map(function(g){
+        var e = editsMap[g.id];
+        return e ? Object.assign({}, g, e, {id: g.id, c: e.c || g.c}) : g;
+      });
+    GLOSSARY.length = 0;
+    Array.prototype.push.apply(GLOSSARY, merged);
+  }
+  rebuildGlossary();
+
+  function addOrUpdateTerm(data, existingId){
+    if(existingId && existingId.charAt(0) === "b"){
+      var editsMap = safeGet("mtq_edits") || {};
+      editsMap[existingId] = { t:data.t, k:data.k, c:data.c, d:data.d };
+      safeSet("mtq_edits", editsMap);
+    } else if(existingId){
+      var customTerms = safeGet("mtq_custom") || [];
+      var idx = customTerms.findIndex(function(x){ return x.id === existingId; });
+      if(idx > -1){ customTerms[idx] = Object.assign({}, customTerms[idx], data, {id: existingId}); }
+      safeSet("mtq_custom", customTerms);
+    } else {
+      var customTerms2 = safeGet("mtq_custom") || [];
+      customTerms2.push(Object.assign({}, data, {id: generateTermId()}));
+      safeSet("mtq_custom", customTerms2);
+    }
+    rebuildGlossary();
+  }
+
+  function deleteTermById(id){
+    if(id.charAt(0) === "c"){
+      var customTerms = (safeGet("mtq_custom") || []).filter(function(x){ return x.id !== id; });
+      safeSet("mtq_custom", customTerms);
+    } else {
+      var deletedIds = safeGet("mtq_deleted") || [];
+      if(deletedIds.indexOf(id) === -1){ deletedIds.push(id); safeSet("mtq_deleted", deletedIds); }
+    }
+    var editsMap = safeGet("mtq_edits") || {};
+    if(editsMap[id]){ delete editsMap[id]; safeSet("mtq_edits", editsMap); }
+    if(markedSet.has(id)){
+      markedSet.delete(id);
+      safeSet("mtq_marked", Array.from(markedSet));
+      updateMarkedTabCount();
+    }
+    rebuildGlossary();
+  }
+
+  function refreshAfterCrud(){
+    totalCountEl.textContent = GLOSSARY.length;
+    renderGlossary();
+    if(!TABS.marked.panel.hidden) renderMarked();
+    updateMarkedTabCount();
+  }
+
+  /* ---------- add / edit / delete term modal ---------- */
+  var termModalOverlay = document.getElementById("termModalOverlay");
+  var tmCatSelect = document.getElementById("tmCat");
+  Object.keys(CATS).forEach(function(key){
+    var opt = document.createElement("option");
+    opt.value = key;
+    opt.textContent = CATS[key].label;
+    tmCatSelect.appendChild(opt);
+  });
+
+  var editingTermId = null;
+  function openTermModal(term){
+    editingTermId = term ? term.id : null;
+    document.getElementById("termModalTitle").textContent = term ? "用語を編集" : "用語を追加";
+    document.getElementById("tmTerm").value = term ? term.t : "";
+    document.getElementById("tmKana").value = term ? term.k : "";
+    tmCatSelect.value = term ? term.c : Object.keys(CATS)[0];
+    document.getElementById("tmDef").value = term ? term.d : "";
+    document.getElementById("tmWarn").textContent = "";
+    document.getElementById("tmDeleteBtn").hidden = !term;
+    termModalOverlay.hidden = false;
+    document.getElementById("tmTerm").focus();
+  }
+  function closeTermModal(){
+    termModalOverlay.hidden = true;
+    editingTermId = null;
+  }
+
+  /* ---------- in-page confirm / alert dialogs ----------
+     This page runs inside a hosted iframe where the browser's native
+     window.confirm()/alert() are not reliably available, so a click on
+     e.g. a delete button can silently do nothing. These reproduce the
+     same "wait for a decision" behavior with the page's own modal UI. */
+  var confirmOverlay = document.getElementById("confirmOverlay");
+  var confirmMessageEl = document.getElementById("confirmMessage");
+  var confirmCancelBtn = document.getElementById("confirmCancelBtn");
+  var confirmOkBtn = document.getElementById("confirmOkBtn");
+  var confirmResolve = null;
+
+  function settleConfirm(result){
+    confirmOverlay.hidden = true;
+    var resolve = confirmResolve;
+    confirmResolve = null;
+    if(resolve) resolve(result);
+  }
+  confirmCancelBtn.addEventListener("click", function(){ settleConfirm(false); });
+  confirmOkBtn.addEventListener("click", function(){ settleConfirm(true); });
+  confirmOverlay.addEventListener("click", function(e){
+    if(e.target === confirmOverlay) settleConfirm(false);
+  });
+
+  function showConfirm(message, okLabel){
+    if(confirmResolve) settleConfirm(false);
+    return new Promise(function(resolve){
+      confirmResolve = resolve;
+      confirmMessageEl.textContent = message;
+      confirmOkBtn.textContent = okLabel || "OK";
+      confirmCancelBtn.hidden = false;
+      confirmOverlay.hidden = false;
+      confirmOkBtn.focus();
+    });
+  }
+  function showAlert(message){
+    if(confirmResolve) settleConfirm(false);
+    return new Promise(function(resolve){
+      confirmResolve = resolve;
+      confirmMessageEl.textContent = message;
+      confirmOkBtn.textContent = "OK";
+      confirmCancelBtn.hidden = true;
+      confirmOverlay.hidden = false;
+      confirmOkBtn.focus();
+    });
+  }
+
+  document.getElementById("addTermBtn").addEventListener("click", function(){ openTermModal(null); });
+  document.getElementById("tmCancelBtn").addEventListener("click", closeTermModal);
+  termModalOverlay.addEventListener("click", function(e){
+    if(e.target === termModalOverlay) closeTermModal();
+  });
+  document.getElementById("tmSaveBtn").addEventListener("click", function(){
+    var t = document.getElementById("tmTerm").value.trim();
+    var k = document.getElementById("tmKana").value.trim();
+    var c = tmCatSelect.value;
+    var d = document.getElementById("tmDef").value.trim();
+    if(!t || !d){
+      document.getElementById("tmWarn").textContent = "用語と定義は必須です。";
+      return;
+    }
+    addOrUpdateTerm({t:t, k:k, c:c, d:d}, editingTermId);
+    closeTermModal();
+    refreshAfterCrud();
+  });
+  document.getElementById("tmDeleteBtn").addEventListener("click", async function(){
+    if(!editingTermId) return;
+    var idToDelete = editingTermId;
+    var ok = await showConfirm("この用語を削除しますか？", "削除する");
+    if(!ok) return;
+    deleteTermById(idToDelete);
+    closeTermModal();
+    refreshAfterCrud();
+  });
+
+  var totalCountEl = document.getElementById("totalCount");
+  totalCountEl.textContent = GLOSSARY.length;
+
+  /* ---------- ticker ---------- */
+  (function buildTicker(){
+    var sample = GLOSSARY.slice(0, 24);
+    var html = sample.map(function(g){
+      return '<span class="ticker-item"><b>'+g.t+'</b>'+g.d.slice(0,26)+'…</span>';
+    }).join("");
+    document.getElementById("tickerTrack").innerHTML = html + html;
+  })();
+
+  /* ---------- tabs ---------- */
+  var TABS = {
+    glossary: { btn: document.getElementById("tabGlossaryBtn"), panel: document.getElementById("panelGlossary") },
+    marked:   { btn: document.getElementById("tabMarkedBtn"),   panel: document.getElementById("panelMarked")   },
+    quiz:     { btn: document.getElementById("tabQuizBtn"),     panel: document.getElementById("panelQuiz")     }
+  };
+  function showTab(name){
+    Object.keys(TABS).forEach(function(key){
+      var active = key === name;
+      TABS[key].btn.setAttribute("aria-selected", active);
+      TABS[key].panel.hidden = !active;
+    });
+    if(name === "marked") renderMarked();
+    if(name === "glossary") renderGlossary();
+  }
+  TABS.glossary.btn.addEventListener("click", function(){ showTab("glossary"); });
+  TABS.marked.btn.addEventListener("click", function(){ showTab("marked"); });
+  TABS.quiz.btn.addEventListener("click", function(){ showTab("quiz"); });
+
+  /* ---------- marks (watchlist) ---------- */
+  // Marks are keyed by stable term id. Older saved marks (from before terms had
+  // ids) were keyed by term text instead -- migrate those to ids where possible.
+  var ID_PATTERN = /^(b\d+|c[0-9a-z]+)$/;
+  var rawMarks = safeGet("mtq_marked") || [];
+  var migratedMarks = rawMarks.map(function(v){
+    if(ID_PATTERN.test(v)) return v;
+    var found = BUILTIN_GLOSSARY.find(function(g){ return g.t === v; });
+    return found ? found.id : null;
+  }).filter(Boolean);
+  var markedSet = new Set(migratedMarks);
+  if(migratedMarks.length !== rawMarks.length){ safeSet("mtq_marked", migratedMarks); }
+
+  var markedTabCountEl = document.getElementById("markedTabCount");
+
+  function toggleMarkState(id){
+    var nowMarked;
+    if(markedSet.has(id)){ markedSet.delete(id); nowMarked = false; }
+    else { markedSet.add(id); nowMarked = true; }
+    safeSet("mtq_marked", Array.from(markedSet));
+    updateMarkedTabCount();
+    return nowMarked;
+  }
+  function updateMarkedTabCount(){
+    markedTabCountEl.textContent = markedSet.size > 0 ? " (" + markedSet.size + ")" : "";
+  }
+  updateMarkedTabCount();
+
+  function syncMarkButtonsUI(){
+    document.querySelectorAll(".mark-btn[data-id]").forEach(function(btn){
+      var isMarked = markedSet.has(btn.getAttribute("data-id"));
+      btn.setAttribute("aria-pressed", isMarked);
+      btn.textContent = isMarked ? "★" : "☆";
+    });
+  }
+
+  // Keep other open tabs/windows of this same page in sync: localStorage is shared
+  // across tabs on the same origin, but an already-open tab only learns about a
+  // change made elsewhere via this "storage" event (it never fires in the tab
+  // that made the change itself).
+  window.addEventListener("storage", function(e){
+    if(e.key === "mtq_marked"){
+      var arr = [];
+      try{ arr = e.newValue ? JSON.parse(e.newValue) : []; }catch(err){}
+      markedSet = new Set(arr);
+      updateMarkedTabCount();
+      syncMarkButtonsUI();
+      if(typeof renderMarked === "function") renderMarked();
+    } else if(e.key === "mtq_custom" || e.key === "mtq_edits" || e.key === "mtq_deleted"){
+      rebuildGlossary();
+      totalCountEl.textContent = GLOSSARY.length;
+      renderGlossary();
+      if(!TABS.marked.panel.hidden) renderMarked();
+    }
+  });
+
+  /* ---------- shared card builder ---------- */
+  function createCard(g, opts){
+    opts = opts || {};
+    var cat = CATS[g.c];
+    var marked = markedSet.has(g.id);
+    var card = document.createElement("div");
+    card.className = "card";
+    card.style.setProperty("--h", cat.hue);
+    card.innerHTML =
+      '<div class="card-top">' +
+        '<div><p class="term">'+g.t+'</p><span class="kana">'+g.k+'</span></div>' +
+        '<div class="card-controls">' +
+          '<button type="button" class="mark-btn" data-id="'+g.id+'" aria-pressed="'+marked+'" aria-label="'+g.t+'をマークする">'+(marked ? '★' : '☆')+'</button>' +
+          '<span class="tag">'+cat.label+'</span>' +
+        '</div>' +
+      '</div>' +
+      '<button type="button" class="def-toggle" aria-expanded="false">定義を見る ▾</button>' +
+      '<p class="def" hidden>'+g.d+'</p>' +
+      '<div class="card-actions">' +
+        '<button type="button" class="btn-link edit-btn">編集</button>' +
+        '<span class="sep">/</span>' +
+        '<button type="button" class="btn-link delete-btn">削除</button>' +
+      '</div>';
+
+    var markBtn = card.querySelector(".mark-btn");
+    markBtn.addEventListener("click", function(){
+      var nowMarked = toggleMarkState(g.id);
+      markBtn.setAttribute("aria-pressed", nowMarked);
+      markBtn.textContent = nowMarked ? "★" : "☆";
+      if(opts.onMarkChange) opts.onMarkChange(nowMarked, card);
+    });
+
+    var toggleBtn = card.querySelector(".def-toggle");
+    var defEl = card.querySelector(".def");
+    toggleBtn.addEventListener("click", function(){
+      var expanded = toggleBtn.getAttribute("aria-expanded") === "true";
+      toggleBtn.setAttribute("aria-expanded", String(!expanded));
+      defEl.hidden = expanded;
+      toggleBtn.textContent = expanded ? "定義を見る ▾" : "定義を隠す ▴";
+    });
+
+    card.querySelector(".edit-btn").addEventListener("click", function(){
+      openTermModal(g);
+    });
+    card.querySelector(".delete-btn").addEventListener("click", async function(){
+      var ok = await showConfirm('「'+g.t+'」を削除しますか？', "削除する");
+      if(!ok) return;
+      deleteTermById(g.id);
+      refreshAfterCrud();
+    });
+
+    return card;
+  }
+
+  /* ---------- glossary ---------- */
+  var activeCats = new Set(Object.keys(CATS));
+  var catFilterEl = document.getElementById("catFilter");
+  var quizCatFilterEl = document.getElementById("quizCatFilter");
+  var quizActiveCats = new Set(Object.keys(CATS));
+
+  function buildCatChips(container, set, onChange){
+    Object.keys(CATS).forEach(function(key){
+      var cat = CATS[key];
+      var btn = document.createElement("button");
+      btn.className = "catchip";
+      btn.type = "button";
+      btn.style.setProperty("--h", cat.hue);
+      btn.textContent = cat.label;
+      btn.setAttribute("aria-pressed", set.has(key));
+      btn.addEventListener("click", function(){
+        if(set.has(key)){ set.delete(key); } else { set.add(key); }
+        btn.setAttribute("aria-pressed", set.has(key));
+        onChange();
+      });
+      container.appendChild(btn);
+    });
+  }
+  buildCatChips(catFilterEl, activeCats, renderGlossary);
+  buildCatChips(quizCatFilterEl, quizActiveCats, function(){});
+
+  document.getElementById("selectAllCats").addEventListener("click", function(){
+    Object.keys(CATS).forEach(function(key){ activeCats.add(key); });
+    catFilterEl.querySelectorAll(".catchip").forEach(function(btn){ btn.setAttribute("aria-pressed", "true"); });
+    renderGlossary();
+  });
+  document.getElementById("deselectAllCats").addEventListener("click", function(){
+    activeCats.clear();
+    catFilterEl.querySelectorAll(".catchip").forEach(function(btn){ btn.setAttribute("aria-pressed", "false"); });
+    renderGlossary();
+  });
+
+  var searchEl = document.getElementById("search");
+  var gridEl = document.getElementById("grid");
+  var countEl = document.getElementById("count");
+  var emptyEl = document.getElementById("empty");
+
+  function renderGlossary(){
+    var q = searchEl.value.trim().toLowerCase();
+    var items = GLOSSARY.filter(function(g){
+      if(!activeCats.has(g.c)) return false;
+      if(!q) return true;
+      return g.t.toLowerCase().indexOf(q) > -1 || g.k.toLowerCase().indexOf(q) > -1 || g.d.indexOf(q) > -1;
+    });
+    countEl.textContent = items.length + " / " + GLOSSARY.length + " 語";
+    gridEl.innerHTML = "";
+    emptyEl.hidden = items.length !== 0;
+    items.forEach(function(g){
+      gridEl.appendChild(createCard(g));
+    });
+  }
+  searchEl.addEventListener("input", renderGlossary);
+  renderGlossary();
+
+  /* ---------- marked (watchlist) panel ---------- */
+  var markedGridEl = document.getElementById("markedGrid");
+  var markedCountEl = document.getElementById("markedCount");
+  var markedEmptyEl = document.getElementById("markedEmpty");
+
+  function renderMarked(){
+    var items = GLOSSARY.filter(function(g){ return markedSet.has(g.id); });
+    markedCountEl.textContent = items.length + " 語をマーク中";
+    markedGridEl.innerHTML = "";
+    markedEmptyEl.hidden = items.length !== 0;
+    items.forEach(function(g){
+      markedGridEl.appendChild(createCard(g, {
+        onMarkChange: function(nowMarked, cardEl){
+          if(!nowMarked){
+            cardEl.remove();
+            var remaining = markedGridEl.children.length;
+            markedCountEl.textContent = remaining + " 語をマーク中";
+            markedEmptyEl.hidden = remaining !== 0;
+          }
+        }
+      }));
+    });
+  }
+  document.getElementById("clearMarksBtn").addEventListener("click", function(){
+    if(markedSet.size === 0) return;
+    markedSet.clear();
+    safeSet("mtq_marked", []);
+    updateMarkedTabCount();
+    renderMarked();
+    renderGlossary();
+  });
+
+  /* ---------- storage helper ---------- */
+  function safeGet(key){
+    try{ var v = localStorage.getItem(key); return v ? JSON.parse(v) : null; }catch(e){ return null; }
+  }
+  function safeSet(key, val){
+    try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){}
+  }
+
+  /* ---------- backup / restore ----------
+     Marks, quiz stats and custom terms all live in this browser's
+     localStorage only. Some browsers/extensions periodically clear
+     site data, so this lets a viewer save a JSON snapshot and load it
+     back later (even in a different browser session on the same
+     device), independent of whatever cleared localStorage. */
+  function pad2(n){ return n < 10 ? "0" + n : String(n); }
+
+  document.getElementById("backupSaveBtn").addEventListener("click", async function(){
+    var payload = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      mtq_marked: safeGet("mtq_marked") || [],
+      mtq_stats: safeGet("mtq_stats") || {attempts:0, correct:0},
+      mtq_custom: safeGet("mtq_custom") || [],
+      mtq_edits: safeGet("mtq_edits") || {},
+      mtq_deleted: safeGet("mtq_deleted") || []
+    };
+    var json = JSON.stringify(payload, null, 2);
+    var dl = null;
+    try{
+      if(window.claude && typeof window.claude.use === "function"){
+        dl = await window.claude.use("downloads");
+      }
+    }catch(e){ dl = null; }
+    if(!dl){
+      await showAlert("この表示環境ではファイルの保存機能を利用できません。");
+      return;
+    }
+    var now = new Date();
+    var filename = "market-terms-backup-" + now.getFullYear() + pad2(now.getMonth()+1) + pad2(now.getDate()) + "-" + pad2(now.getHours()) + pad2(now.getMinutes()) + ".json";
+    try{
+      await dl.save({filename: filename, data: json});
+    }catch(err){
+      if(err && err.code === "declined") return;
+      await showAlert("バックアップの保存に失敗しました。" + (err && err.message ? "（" + err.message + "）" : ""));
+    }
+  });
+
+  document.getElementById("backupLoadBtn").addEventListener("click", function(){
+    document.getElementById("backupFileInput").click();
+  });
+  document.getElementById("backupFileInput").addEventListener("change", function(e){
+    var file = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = async function(){
+      var data;
+      try{ data = JSON.parse(String(reader.result)); }catch(err){
+        await showAlert("ファイルを読み込めませんでした。このツールで保存したバックアップファイルを選択してください。");
+        return;
+      }
+      if(!data || typeof data !== "object"){
+        await showAlert("ファイルの形式が正しくありません。");
+        return;
+      }
+      var ok = await showConfirm("現在のマーク・クイズ成績・追加した用語を、このバックアップファイルの内容で上書きします。よろしいですか？", "復元する");
+      if(!ok) return;
+
+      safeSet("mtq_marked", Array.isArray(data.mtq_marked) ? data.mtq_marked : []);
+      safeSet("mtq_stats", (data.mtq_stats && typeof data.mtq_stats === "object") ? data.mtq_stats : {attempts:0, correct:0});
+      safeSet("mtq_custom", Array.isArray(data.mtq_custom) ? data.mtq_custom : []);
+      safeSet("mtq_edits", (data.mtq_edits && typeof data.mtq_edits === "object") ? data.mtq_edits : {});
+      safeSet("mtq_deleted", Array.isArray(data.mtq_deleted) ? data.mtq_deleted : []);
+
+      rebuildGlossary();
+      totalCountEl.textContent = GLOSSARY.length;
+      markedSet = new Set((safeGet("mtq_marked") || []).filter(function(v){ return ID_PATTERN.test(v); }));
+      updateMarkedTabCount();
+      syncMarkButtonsUI();
+      renderGlossary();
+      if(!TABS.marked.panel.hidden) renderMarked();
+      refreshCumulativeStat();
+      await showAlert("バックアップから復元しました。");
+    };
+    reader.readAsText(file);
+  });
+
+  /* ---------- quiz ---------- */
+  var quizSetupEl = document.getElementById("quizSetup");
+  var quizActiveEl = document.getElementById("quizActive");
+  var quizResultEl = document.getElementById("quizResult");
+  var setupWarn = document.getElementById("setupWarn");
+  var cumulativeStatEl = document.getElementById("cumulativeStat");
+
+  function refreshCumulativeStat(){
+    var s = safeGet("mtq_stats") || {attempts:0, correct:0};
+    if(s.attempts === 0){
+      cumulativeStatEl.innerHTML = "これまでの記録: まだクイズに挑戦していません。";
+    } else {
+      var rate = Math.round((s.correct / s.attempts) * 100);
+      cumulativeStatEl.innerHTML = "これまでの累計: <b>"+s.correct+"</b> / <b>"+s.attempts+"</b> 問正解（正答率 <b>"+rate+"%</b>）";
+    }
+  }
+  refreshCumulativeStat();
+
+  var quiz = null;
+
+  function shuffle(arr){
+    var a = arr.slice();
+    for(var i=a.length-1;i>0;i--){
+      var j = Math.floor(Math.random()*(i+1));
+      var tmp=a[i]; a[i]=a[j]; a[j]=tmp;
+    }
+    return a;
+  }
+
+  function buildQuestions(pool, count, mode){
+    var chosen = shuffle(pool).slice(0, count);
+    return chosen.map(function(g){
+      var type = mode;
+      if(mode === "mixed") type = Math.random() < 0.5 ? "def2term" : "term2def";
+      var samePool = GLOSSARY.filter(function(x){ return x.c === g.c && x.id !== g.id; });
+      var otherPool = GLOSSARY.filter(function(x){ return x.id !== g.id; });
+      var distractSource = samePool.length >= 3 ? samePool : otherPool;
+      var distractors = shuffle(distractSource).slice(0, 3);
+      var optionTerms = shuffle([g].concat(distractors));
+      if(type === "def2term"){
+        return {term:g, type:type, prompt:g.d, correctTerm:g, options:optionTerms};
+      } else {
+        return {term:g, type:type, prompt:g.t + "（" + g.k + "）", correctTerm:g, options:optionTerms};
+      }
+    });
+  }
+
+  document.getElementById("startBtn").addEventListener("click", function(){
+    if(quizActiveCats.size === 0){
+      setupWarn.textContent = "少なくとも1つのカテゴリを選択してください。";
+      return;
+    }
+    setupWarn.textContent = "";
+    var pool = GLOSSARY.filter(function(g){ return quizActiveCats.has(g.c); });
+    var count = Math.min(parseInt(document.getElementById("qCount").value, 10), pool.length);
+    var mode = document.getElementById("qMode").value;
+    quiz = {
+      questions: buildQuestions(pool, count, mode),
+      index: 0,
+      correct: 0,
+      results: [],
+      answered: false
+    };
+    quizSetupEl.hidden = true;
+    quizResultEl.hidden = true;
+    quizActiveEl.hidden = false;
+    renderQuestion();
+  });
+
+  function renderQuestion(){
+    quiz.answered = false;
+    var q = quiz.questions[quiz.index];
+    document.getElementById("qPos").textContent = "問題 " + (quiz.index+1) + " / " + quiz.questions.length;
+    document.getElementById("qScore").textContent = "正解 " + quiz.correct;
+    document.getElementById("progressFill").style.width = (quiz.index / quiz.questions.length * 100) + "%";
+    var tagEl = document.getElementById("qTag");
+    tagEl.textContent = CATS[q.term.c].label;
+    tagEl.style.setProperty("--h", CATS[q.term.c].hue);
+    var promptEl = document.getElementById("qPrompt");
+    promptEl.textContent = q.prompt;
+    promptEl.className = "q-prompt" + (q.type === "term2def" ? " is-term" : "");
+    var optsEl = document.getElementById("qOptions");
+    optsEl.innerHTML = "";
+    q.options.forEach(function(optTerm){
+      var mainText = q.type === "def2term" ? optTerm.t : optTerm.d;
+      var explainText = q.type === "def2term" ? optTerm.d : ("用語：" + optTerm.t + "（" + optTerm.k + "）");
+      var btn = document.createElement("button");
+      btn.className = "opt";
+      btn.type = "button";
+      btn.innerHTML =
+        '<span class="opt-main">'+mainText+'</span>' +
+        '<span class="opt-explain" hidden>'+explainText+'</span>';
+      btn.addEventListener("click", function(){ onAnswer(optTerm, btn); });
+      optsEl.appendChild(btn);
+    });
+    document.getElementById("nextBtn").disabled = true;
+  }
+
+  function onAnswer(optTerm, btn){
+    if(quiz.answered) return;
+    quiz.answered = true;
+    var q = quiz.questions[quiz.index];
+    var isCorrect = optTerm.id === q.correctTerm.id;
+    if(isCorrect) quiz.correct++;
+    quiz.results.push({term:q.term, correct:isCorrect});
+    Array.prototype.forEach.call(document.querySelectorAll("#qOptions .opt"), function(b){
+      b.disabled = true;
+      b.querySelector(".opt-explain").hidden = false;
+      var mainText = b.querySelector(".opt-main").textContent;
+      var isThisCorrect = q.type === "def2term" ? mainText === q.correctTerm.t : mainText === q.correctTerm.d;
+      if(isThisCorrect) b.classList.add("correct");
+      else if(b === btn) b.classList.add("wrong");
+    });
+    document.getElementById("nextBtn").disabled = false;
+  }
+
+  document.getElementById("nextBtn").addEventListener("click", function(){
+    quiz.index++;
+    if(quiz.index >= quiz.questions.length){
+      finishQuiz();
+    } else {
+      renderQuestion();
+    }
+  });
+
+  function finishQuiz(){
+    document.getElementById("progressFill").style.width = "100%";
+    quizActiveEl.hidden = true;
+    quizResultEl.hidden = false;
+    var total = quiz.questions.length;
+    document.getElementById("resultScore").textContent = quiz.correct + " / " + total;
+    var rate = Math.round((quiz.correct/total)*100);
+    document.getElementById("resultRate").textContent = "正答率 " + rate + "%";
+
+    var missed = quiz.results.filter(function(r){ return !r.correct; });
+    var missedListEl = document.getElementById("missedList");
+    if(missed.length === 0){
+      missedListEl.innerHTML = '<p class="none-missed">全問正解です。おみごとです。</p>';
+    } else {
+      missedListEl.innerHTML = missed.map(function(r){
+        return '<div class="missed-item"><p class="term">'+r.term.t+'</p><p class="def">'+r.term.d+'</p></div>';
+      }).join("");
+    }
+
+    var s = safeGet("mtq_stats") || {attempts:0, correct:0};
+    s.attempts += total;
+    s.correct += quiz.correct;
+    safeSet("mtq_stats", s);
+    refreshCumulativeStat();
+  }
+
+  document.getElementById("retryBtn").addEventListener("click", function(){
+    document.getElementById("startBtn").click();
+  });
+  document.getElementById("backBtn").addEventListener("click", function(){
+    quizResultEl.hidden = true;
+    quizSetupEl.hidden = false;
+  });
+
+})();
+</script>
