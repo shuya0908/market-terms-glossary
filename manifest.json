@@ -1,0 +1,15 @@
+{
+  "name": "マーケット用語ターミナル",
+  "short_name": "市場用語",
+  "description": "取引所・清算決済・システム用語を学べる用語集＋4択クイズ",
+  "start_url": "./marketterms.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#EEF1EC",
+  "theme_color": "#131A10",
+  "icons": [
+    { "src": "icon.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any" },
+    { "src": "icon.png", "sizes": "1024x1024", "type": "image/png", "purpose": "maskable" }
+  ]
+}
