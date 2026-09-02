@@ -387,7 +387,7 @@
   .opt.correct{background:var(--success-soft);border-color:var(--success);color:var(--success-ink);}
   .opt.wrong{background:var(--danger-soft);border-color:var(--danger);color:var(--danger-ink);}
   .opt.correct .opt-explain,.opt.wrong .opt-explain{border-top-color:currentColor;opacity:.85;}
-  .quiz-actions{display:flex;justify-content:flex-end;margin-top:18px;}
+  .quiz-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;}
 
   .result-score{font-family:var(--font-mono);font-size:2.6rem;font-weight:600;font-variant-numeric:tabular-nums;margin:6px 0 2px;}
   .result-rate{color:var(--ink-muted);font-size:.9rem;margin-bottom:26px;}
@@ -729,6 +729,7 @@
       </div>
       <div class="options" id="qOptions"></div>
       <div class="quiz-actions">
+        <button class="btn ghost" id="quitBtn" type="button">中断する</button>
         <button class="btn" id="nextBtn" disabled>次の問題へ</button>
       </div>
     </div>
@@ -1447,6 +1448,15 @@
     } else {
       renderQuestion();
     }
+  });
+
+  document.getElementById("quitBtn").addEventListener("click", async function(){
+    var ok = await showConfirm("クイズを中断しますか？ここまでの回答は記録されません。", "中断する");
+    if(!ok) return;
+    quiz = null;
+    quizActiveEl.hidden = true;
+    quizResultEl.hidden = true;
+    quizSetupEl.hidden = false;
   });
 
   function finishQuiz(){
