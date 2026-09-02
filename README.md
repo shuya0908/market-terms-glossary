@@ -10,6 +10,7 @@
 - **マーク（ウォッチリスト）機能**: 気になる用語をマークして後から一覧できます。同じブラウザの複数タブ間でもマーク状態がリアルタイムに同期します。
 - **用語の追加・編集・削除**: 組み込みの用語を含め、すべての用語をその場で追加・編集・削除できます（変更内容はブラウザのlocalStorageに保存されます）。
 - **バックアップの保存・復元**: マーク・クイズの成績・追加した用語をJSONファイルとして保存し、後から読み込んで復元できます。
+- **ホーム画面への追加（PWA）**: iPhoneのSafariなどから「ホーム画面に追加」すると、URLバーなしのアプリのような見た目で起動できます。マーク・クイズ成績・追加した用語はブラウザのlocalStorageに保存されるため、ホーム画面から開いた場合も保持されます（端末をまたいだ同期はされません。上記のバックアップ機能をご利用ください）。
 
 ## 使い方
 
@@ -27,12 +28,14 @@ python3 -m http.server 8000
 
 ## 技術構成
 
-HTML / CSS / JavaScript のみで構成されたWebアプリケーションで、ビルド環境は不要です。用語データは `terms.json` に分離しており、`marketterms.html` が起動時に `fetch` で読み込みます。外部ライブラリへの依存はGoogle Fonts（Zen Kaku Gothic New, Noto Sans JP, IBM Plex Mono）のみです。
+HTML / CSS / JavaScript のみで構成されたWebアプリケーションで、ビルド環境は不要です。用語データは `terms.json` に分離しており、`marketterms.html` が起動時に `fetch` で読み込みます。外部ライブラリへの依存はGoogle Fonts（Zen Kaku Gothic New, Noto Sans JP, IBM Plex Mono）のみです。`manifest.json` と `icon.png` により、iPhone等での「ホーム画面に追加」に対応しています。
 
 ## ファイル構成
 
 - `marketterms.html` — 画面表示・検索・クイズ・マーク・バックアップなどのロジック一式
 - `terms.json` — 組み込みの用語データ（用語・ふりがな・カテゴリ・定義）
+- `manifest.json` — ホーム画面追加（PWA）用のWeb App Manifest
+- `icon.png` — ホーム画面アイコン
 
 ## 免責事項
 
