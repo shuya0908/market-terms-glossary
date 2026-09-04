@@ -268,9 +268,8 @@
     background:var(--surface);
     display:flex;flex-direction:column;gap:8px;
   }
-  .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+  .card-top{display:flex;justify-content:space-between;align-items:center;gap:10px;}
   .card-actions{display:flex;align-items:center;gap:8px;}
-  .card-controls{display:flex;align-items:center;gap:8px;flex-shrink:0;}
   .term{font-family:var(--font-display);font-weight:700;font-size:1.05rem;margin:0;}
   .kana{font-family:var(--font-mono);font-size:.72rem;color:var(--ink-muted);display:block;margin-top:2px;}
   .tag{
@@ -1105,12 +1104,10 @@
     card.style.setProperty("--h", cat.hue);
     card.innerHTML =
       '<div class="card-top">' +
-        '<div><p class="term">'+g.t+'</p><span class="kana">'+g.k+'</span></div>' +
-        '<div class="card-controls">' +
-          '<button type="button" class="mark-btn" data-id="'+g.id+'" aria-pressed="'+marked+'" aria-label="'+g.t+'をマークする">'+(marked ? '★' : '☆')+'</button>' +
-          '<span class="tag">'+cat.label+'</span>' +
-        '</div>' +
+        '<span class="tag">'+cat.label+'</span>' +
+        '<button type="button" class="mark-btn" data-id="'+g.id+'" aria-pressed="'+marked+'" aria-label="'+g.t+'をマークする">'+(marked ? '★' : '☆')+'</button>' +
       '</div>' +
+      '<div><p class="term">'+g.t+'</p><span class="kana">'+g.k+'</span></div>' +
       '<button type="button" class="def-toggle" aria-expanded="false">定義を見る ▾</button>' +
       '<p class="def" hidden>'+g.d+'</p>' +
       '<div class="card-actions">' +
