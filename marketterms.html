@@ -668,6 +668,9 @@
         <li>自主規制関連用語集 | 日本証券業協会 — https://www.jsda.or.jp/shijyo/seido/jishukisei/words/</li>
         <li>DVP決済 | 株式会社日本証券クリアリング機構 — https://www.jpx.co.jp/jscc/seisan/genbutsu/acceptance_debt/dvp.html</li>
         <li>SORとは | マネックス証券 — https://info.monex.co.jp/help/stock/japan-trading/sor.html</li>
+        <li>ISDA Documentation | International Swaps and Derivatives Association — https://www.isda.org/</li>
+        <li>Basel Framework | Bank for International Settlements — https://www.bis.org/basel_framework/</li>
+        <li>実務で使える金融工学 — http://practicalfinancialengineer.info/</li>
       </ul>
     </div>
   </div>
@@ -1152,6 +1155,15 @@
   var quizCatFilterEl = document.getElementById("quizCatFilter");
   var quizActiveCats = new Set(Object.keys(CATS));
 
+  /* Card lists (glossary / marked) are grouped by category, in the same
+     order as the category filter chips (CATS key order). */
+  var CAT_ORDER = Object.keys(CATS);
+  function sortByCategory(items){
+    return items.slice().sort(function(a, b){
+      return CAT_ORDER.indexOf(a.c) - CAT_ORDER.indexOf(b.c);
+    });
+  }
+
   function buildCatChips(container, set, onChange){
     Object.keys(CATS).forEach(function(key){
       var cat = CATS[key];
@@ -1195,6 +1207,7 @@
       if(!q) return true;
       return g.t.toLowerCase().indexOf(q) > -1 || g.k.toLowerCase().indexOf(q) > -1 || g.d.indexOf(q) > -1;
     });
+    items = sortByCategory(items);
     countEl.textContent = items.length + " / " + GLOSSARY.length + " 語";
     gridEl.innerHTML = "";
     emptyEl.hidden = items.length !== 0;
@@ -1211,7 +1224,7 @@
   var markedEmptyEl = document.getElementById("markedEmpty");
 
   function renderMarked(){
-    var items = GLOSSARY.filter(function(g){ return markedSet.has(g.id); });
+    var items = sortByCategory(GLOSSARY.filter(function(g){ return markedSet.has(g.id); }));
     markedCountEl.textContent = items.length + " 語をマーク中";
     markedGridEl.innerHTML = "";
     markedEmptyEl.hidden = items.length !== 0;
