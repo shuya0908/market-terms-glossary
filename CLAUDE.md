@@ -29,7 +29,7 @@ Artifactを再公開する前に、必ずArtifactツールの `read` アクシ�
 
 `terms.json` に新しい用語を追加するたびに、追加した用語だけでなく **用語集全体のカテゴリ分類を見直すこと**。具体的には:
 
-- 新しい用語がどのカテゴリ（`marketterms.html` の `CATS` に定義された `board` / `order` / `market` / `clearing` / `derivative` / `tech` / `compliance` / `front` / `middle` / `back` / `fx` / `bond` / `quant` など）に属するかを機械的に決めるのではなく、既存の同カテゴリの用語群と並べて意味的に一貫しているか確認する。
+- 新しい用語がどのカテゴリ（`marketterms.html` の `CATS` に定義された `board` / `order` / `market` / `clearing` / `derivative` / `tech` / `compliance` / `front` / `middle` / `back` / `fx` / `bond` / `quant` / `margin` など）に属するかを機械的に決めるのではなく、既存の同カテゴリの用語群と並べて意味的に一貫しているか確認する。カテゴリの正確な一覧は、都度 `marketterms.html` の `CATS` オブジェクトを確認すること（このリストは例示であり、新カテゴリ追加時にここを更新し忘れても実害はない）。
 - 追加によって、既存の用語のカテゴリ分けが相対的に不自然になっていないか（例：あるカテゴリに新設した概念グループが増えたことで、既存の類似用語がそのカテゴリへ移した方が一貫性が高くなる、逆に既存カテゴリに収まりきらなくなった、など）を確認し、必要なら既存用語のカテゴリも一緒に変更する。
 - 既存のカテゴリでは意味的に無理がある場合は、新しいカテゴリを追加してよい（追加する際は `marketterms.html` の `CATS` オブジェクトに `label` と重複しない `hue` を定義する）。
 - カテゴリ変更は `terms.json` の `c` フィールドのみで表現され、`marketterms.html` 側にカテゴリ別の用語リストは存在しない（`CATS` はラベル・色の定義のみ）。そのため用語のカテゴリを変更する場合は `terms.json` を編集するだけでよいが、新カテゴリを追加した場合は `marketterms.html` の `CATS` とREADME.mdのカテゴリ一覧の説明も合わせて更新すること。
