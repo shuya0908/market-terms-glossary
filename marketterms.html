@@ -1591,10 +1591,7 @@
     if(cands.length === 0) return null;
     var preferred = cands.filter(function(w){ return w.length <= 10; });
     var pool = preferred.length ? preferred : cands;
-    var maxLen = 0;
-    pool.forEach(function(w){ if(w.length > maxLen) maxLen = w.length; });
-    var longest = pool.filter(function(w){ return w.length === maxLen; });
-    return longest[Math.floor(Math.random() * longest.length)];
+    return pool[Math.floor(Math.random() * pool.length)];
   }
 
   function maskDefinition(def, word){
