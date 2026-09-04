@@ -268,9 +268,8 @@
     background:var(--surface);
     display:flex;flex-direction:column;gap:8px;
   }
-  .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+  .card-top{display:flex;justify-content:space-between;align-items:center;gap:10px;}
   .card-actions{display:flex;align-items:center;gap:8px;}
-  .card-controls{display:flex;align-items:center;gap:8px;flex-shrink:0;}
   .term{font-family:var(--font-display);font-weight:700;font-size:1.05rem;margin:0;}
   .kana{font-family:var(--font-mono);font-size:.72rem;color:var(--ink-muted);display:block;margin-top:2px;}
   .tag{
@@ -501,6 +500,9 @@
         <li>自主規制関連用語集 | 日本証券業協会 — https://www.jsda.or.jp/shijyo/seido/jishukisei/words/</li>
         <li>DVP決済 | 株式会社日本証券クリアリング機構 — https://www.jpx.co.jp/jscc/seisan/genbutsu/acceptance_debt/dvp.html</li>
         <li>SORとは | マネックス証券 — https://info.monex.co.jp/help/stock/japan-trading/sor.html</li>
+        <li>ISDA Documentation | International Swaps and Derivatives Association — https://www.isda.org/</li>
+        <li>Basel Framework | Bank for International Settlements — https://www.bis.org/basel_framework/</li>
+        <li>実務で使える金融工学 — http://practicalfinancialengineer.info/</li>
       </ul>
     </div>
   </div>
@@ -983,7 +985,9 @@
     middle:     { label:"ミドル",     hue:290 },
     back:       { label:"バック",     hue:345 },
     fx:         { label:"為替取引（FX）", hue:125 },
-    bond:       { label:"債券・マネーマーケット", hue:175 }
+    bond:       { label:"債券・マネーマーケット", hue:175 },
+    quant:      { label:"クオンツ・プライシングモデル", hue:45  },
+    margin:     { label:"担保・与信管理", hue:5   }
   };
 
   fetch("terms.json")
@@ -1271,12 +1275,10 @@
     card.style.setProperty("--h", cat.hue);
     card.innerHTML =
       '<div class="card-top">' +
-        '<div><p class="term">'+g.t+'</p><span class="kana">'+g.k+'</span></div>' +
-        '<div class="card-controls">' +
-          '<button type="button" class="mark-btn" data-id="'+g.id+'" aria-pressed="'+marked+'" aria-label="'+g.t+'をマークする">'+(marked ? '★' : '☆')+'</button>' +
-          '<span class="tag">'+cat.label+'</span>' +
-        '</div>' +
+        '<span class="tag">'+cat.label+'</span>' +
+        '<button type="button" class="mark-btn" data-id="'+g.id+'" aria-pressed="'+marked+'" aria-label="'+g.t+'をマークする">'+(marked ? '★' : '☆')+'</button>' +
       '</div>' +
+      '<div><p class="term">'+g.t+'</p><span class="kana">'+g.k+'</span></div>' +
       '<button type="button" class="def-toggle" aria-expanded="false">定義を見る ▾</button>' +
       '<p class="def" hidden>'+g.d+'</p>' +
       '<div class="card-actions">' +
@@ -1321,6 +1323,15 @@
   var quizCatFilterEl = document.getElementById("quizCatFilter");
   var quizActiveCats = new Set(Object.keys(CATS));
 
+  /* Card lists (glossary / marked) are grouped by category, in the same
+     order as the category filter chips (CATS key order). */
+  var CAT_ORDER = Object.keys(CATS);
+  function sortByCategory(items){
+    return items.slice().sort(function(a, b){
+      return CAT_ORDER.indexOf(a.c) - CAT_ORDER.indexOf(b.c);
+    });
+  }
+
   function buildCatChips(container, set, onChange){
     Object.keys(CATS).forEach(function(key){
       var cat = CATS[key];
@@ -1364,6 +1375,7 @@
       if(!q) return true;
       return g.t.toLowerCase().indexOf(q) > -1 || g.k.toLowerCase().indexOf(q) > -1 || g.d.indexOf(q) > -1;
     });
+    items = sortByCategory(items);
     countEl.textContent = items.length + " / " + GLOSSARY.length + " 語";
     gridEl.innerHTML = "";
     emptyEl.hidden = items.length !== 0;
@@ -1380,7 +1392,7 @@
   var markedEmptyEl = document.getElementById("markedEmpty");
 
   function renderMarked(){
-    var items = GLOSSARY.filter(function(g){ return markedSet.has(g.id); });
+    var items = sortByCategory(GLOSSARY.filter(function(g){ return markedSet.has(g.id); }));
     markedCountEl.textContent = items.length + " 語をマーク中";
     markedGridEl.innerHTML = "";
     markedEmptyEl.hidden = items.length !== 0;
