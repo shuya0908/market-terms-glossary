@@ -1614,7 +1614,10 @@
     var chosen = shuffle(pool).slice(0, count);
     return chosen.map(function(g){
       var type = mode;
-      if(mode === "mixed") type = Math.random() < 0.5 ? "def2term" : "term2def";
+      if(mode === "mixed"){
+        var MIXED_TYPES = ["def2term", "term2def", "fillblank"];
+        type = MIXED_TYPES[Math.floor(Math.random() * MIXED_TYPES.length)];
+      }
       if(type === "fillblank"){
         var blankWord = pickBlankWord(g.d);
         var masked = blankWord ? maskDefinition(g.d, blankWord) : null;
