@@ -1611,13 +1611,13 @@
     }).toLowerCase();
   }
 
-  function buildQuestions(pool, count, mode){
+  function buildQuestions(pool, count, mode, fixedTypes){
     var chosen = shuffle(pool).slice(0, count);
     return chosen.map(function(g){
       var type = mode;
       if(mode === "mixed"){
         var MIXED_TYPES = ["def2term", "term2def", "fillblank"];
-        type = MIXED_TYPES[Math.floor(Math.random() * MIXED_TYPES.length)];
+        type = (fixedTypes && fixedTypes[g.id]) || MIXED_TYPES[Math.floor(Math.random() * MIXED_TYPES.length)];
       }
       if(type === "fillblank"){
         var blankWord = pickBlankWord(g.d);
@@ -1728,7 +1728,7 @@
     var feedbackEl = document.getElementById("qBlankFeedback");
     var isCorrect = normalizeAnswer(inputEl.value) !== "" && normalizeAnswer(inputEl.value) === normalizeAnswer(q.blankWord);
     if(isCorrect) quiz.correct++;
-    quiz.results.push({term:q.term, correct:isCorrect});
+    quiz.results.push({term:q.term, correct:isCorrect, type:q.type});
     inputEl.disabled = true;
     submitBtn.disabled = true;
     inputEl.classList.add(isCorrect ? "correct" : "wrong");
@@ -1752,7 +1752,7 @@
     var q = quiz.questions[quiz.index];
     var isCorrect = optTerm.id === q.correctTerm.id;
     if(isCorrect) quiz.correct++;
-    quiz.results.push({term:q.term, correct:isCorrect});
+    quiz.results.push({term:q.term, correct:isCorrect, type:q.type});
     Array.prototype.forEach.call(document.querySelectorAll("#qOptions .opt"), function(b){
       b.disabled = true;
       b.querySelector(".opt-explain").hidden = false;
@@ -1793,6 +1793,8 @@
 
     var missed = quiz.results.filter(function(r){ return !r.correct; });
     quiz.missedTerms = missed.map(function(r){ return r.term; });
+    quiz.missedTypes = {};
+    missed.forEach(function(r){ quiz.missedTypes[r.term.id] = r.type; });
     var missedListEl = document.getElementById("missedList");
     var retryMissedBtn = document.getElementById("retryMissedBtn");
     if(missed.length === 0){
@@ -1818,8 +1820,9 @@
   document.getElementById("retryMissedBtn").addEventListener("click", function(){
     var missedTerms = quiz.missedTerms;
     var mode = quiz.mode;
+    var missedTypes = quiz.missedTypes;
     quiz = {
-      questions: buildQuestions(missedTerms, missedTerms.length, mode),
+      questions: buildQuestions(missedTerms, missedTerms.length, mode, missedTypes),
       index: 0,
       correct: 0,
       results: [],
