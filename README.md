@@ -4,11 +4,11 @@
 
 ## オンラインで試す
 
-以下のURLで、このリポジトリの内容をブラウザ上でそのまま試せます（サーバー不要）。
+以下のURLで、このリポジトリの内容をブラウザ上でそのまま試せます（サーバー不要）。GitHub Pagesで公開しています。
 
-https://claude.ai/code/artifact/1f6a23bb-decd-4610-9d4b-354ca3267fc3
+https://shuya0908.github.io/market-terms-glossary/
 
-このリポジトリの `marketterms.html` / `terms.json` / `manifest.json` / `icon.png` に変更が加えられた際は、同じ内容が上記URLにも反映されます。
+`main` ブランチに変更がpushされると、GitHub Actions（`.github/workflows/pages.yml`）により自動的に上記URLへ反映されます。
 
 ## できること
 
@@ -23,13 +23,13 @@ https://claude.ai/code/artifact/1f6a23bb-decd-4610-9d4b-354ca3267fc3
 
 ## 使い方
 
-用語データは `terms.json` に分離されており、`marketterms.html` が読み込み時に `fetch` で取得します。そのため `file://` で直接開くとブラウザのCORS制限により `terms.json` を読み込めません。`marketterms.html` と `terms.json` を同じフォルダに置いたまま、簡易HTTPサーバーを起動して開いてください（ビルド環境は不要です）。
+用語データは `terms.json` に分離されており、`index.html` が読み込み時に `fetch` で取得します。そのため `file://` で直接開くとブラウザのCORS制限により `terms.json` を読み込めません。`index.html` と `terms.json` を同じフォルダに置いたまま、簡易HTTPサーバーを起動して開いてください（ビルド環境は不要です）。
 
 ```
 python3 -m http.server 8000
 ```
 
-その後ブラウザで `http://localhost:8000/marketterms.html` を開きます。
+その後ブラウザで `http://localhost:8000/index.html` を開きます。
 
 ## 収録内容
 
@@ -37,14 +37,15 @@ python3 -m http.server 8000
 
 ## 技術構成
 
-HTML / CSS / JavaScript のみで構成されたWebアプリケーションで、ビルド環境は不要です。用語データは `terms.json` に分離しており、`marketterms.html` が起動時に `fetch` で読み込みます。外部ライブラリへの依存はGoogle Fonts（Zen Kaku Gothic New, Noto Sans JP, IBM Plex Mono）のみです。`manifest.json` と `icon.png` により、iPhone等での「ホーム画面に追加」に対応しています。
+HTML / CSS / JavaScript のみで構成されたWebアプリケーションで、ビルド環境は不要です。用語データは `terms.json` に分離しており、`index.html` が起動時に `fetch` で読み込みます。外部ライブラリへの依存はGoogle Fonts（Zen Kaku Gothic New, Noto Sans JP, IBM Plex Mono）のみです。`manifest.json` と `icon.png` により、iPhone等での「ホーム画面に追加」に対応しています。GitHub Pagesへの公開は `.github/workflows/pages.yml` のGitHub Actionsワークフローが行います。
 
 ## ファイル構成
 
-- `marketterms.html` — 画面表示・検索・クイズ・マーク・バックアップなどのロジック一式
+- `index.html` — 画面表示・検索・クイズ・マーク・バックアップなどのロジック一式
 - `terms.json` — 組み込みの用語データ（用語・ふりがな・カテゴリ・定義）
 - `manifest.json` — ホーム画面追加（PWA）用のWeb App Manifest
 - `icon.png` — ホーム画面アイコン
+- `.github/workflows/pages.yml` — GitHub Pagesへの自動デプロイ用ワークフロー
 
 ## 免責事項
 
