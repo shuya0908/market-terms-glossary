@@ -954,6 +954,7 @@
       <div class="missed" id="missedList"></div>
       <div class="result-actions">
         <button class="btn" id="retryBtn">同じ設定でもう一度</button>
+        <button class="btn ghost" id="retryMissedBtn" hidden>間違えた問題だけ再挑戦</button>
         <button class="btn ghost" id="backBtn">設定に戻る</button>
       </div>
     </div>
@@ -1653,7 +1654,8 @@
       index: 0,
       correct: 0,
       results: [],
-      answered: false
+      answered: false,
+      mode: mode
     };
     quizSetupEl.hidden = true;
     quizResultEl.hidden = true;
@@ -1790,13 +1792,17 @@
     document.getElementById("resultRate").textContent = "正答率 " + rate + "%";
 
     var missed = quiz.results.filter(function(r){ return !r.correct; });
+    quiz.missedTerms = missed.map(function(r){ return r.term; });
     var missedListEl = document.getElementById("missedList");
+    var retryMissedBtn = document.getElementById("retryMissedBtn");
     if(missed.length === 0){
       missedListEl.innerHTML = '<p class="none-missed">全問正解です。おみごとです。</p>';
+      retryMissedBtn.hidden = true;
     } else {
       missedListEl.innerHTML = missed.map(function(r){
         return '<div class="missed-item"><p class="term">'+r.term.t+'</p><p class="def">'+r.term.d+'</p></div>';
       }).join("");
+      retryMissedBtn.hidden = false;
     }
 
     var s = safeGet("mtq_stats") || {attempts:0, correct:0};
@@ -1808,6 +1814,22 @@
 
   document.getElementById("retryBtn").addEventListener("click", function(){
     document.getElementById("startBtn").click();
+  });
+  document.getElementById("retryMissedBtn").addEventListener("click", function(){
+    var missedTerms = quiz.missedTerms;
+    var mode = quiz.mode;
+    quiz = {
+      questions: buildQuestions(missedTerms, missedTerms.length, mode),
+      index: 0,
+      correct: 0,
+      results: [],
+      answered: false,
+      mode: mode
+    };
+    quizSetupEl.hidden = true;
+    quizResultEl.hidden = true;
+    quizActiveEl.hidden = false;
+    renderQuestion();
   });
   document.getElementById("backBtn").addEventListener("click", function(){
     quizResultEl.hidden = true;
