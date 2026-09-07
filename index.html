@@ -1663,6 +1663,8 @@
         if(parts) parts.forEach(function(p){ out.push(p); });
       }
     });
+    // 2文字以下の単語は穴埋めにしても学習効果が薄いため候補から除外する
+    out = out.filter(function(w){ return w.length >= 3; });
     return Array.from(new Set(out));
   }
 
