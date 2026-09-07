@@ -1584,21 +1584,101 @@
     "一定","場合","状態","以上","以下","状況","情報",
     "各種","可能","不可","対象","一部","全体","通常","一般"
   ]);
-  var BLANK_WORD_RE = /[一-鿿ァ-ヺーa-zA-Z0-9]{2,}/g;
+  // 漢字・カタカナ・アルファベット・数字の文字種をまたいで連結しないよう、
+  // 文字種ごとに独立したパターンでまとめる（例：「2営業日後」を1語として
+  // 誤って切り出さず、「営業日」のような単語単位の候補にするため）。
+  var BLANK_WORD_RE = /[一-鿿]{2,}|[ァ-ヺー]{2,}|[a-zA-Z]{2,}|[0-9]{2,}/g;
+
+  // 定義文中で複数語がくっついた1つの漢字の連なりを、意味のある単語単位に
+  // 分割するための辞書。用語集自体の用語名（＝この用語集における「1つの
+  // 概念」）に加え、定義文によく出てくる一般的な語を少数だけ手動で登録する。
+  var BLANK_ATOMIC_WORDS = [
+    "期間","価格","規制","機関","協会","取引所","評価","損益","資本","自己資本",
+    "行使","権利","履行","不履行","債務","同士","水準","部分","方式","制度","手段",
+    "情報","基準","単位","比率","割合","金額","残高","期日","満期","契約","条件",
+    "対象","目的","範囲","内容","方法","状態","要件","処理","調達","発行","償還",
+    "通貨","証券","銀行","保険","委員会","規則","監督","当局","商品","研究所",
+    "運用","資産","負債","元本","削減","転換","株式","加重","平均","急激",
+    "機能","停止","緊急","総額","時価","日本","協定","法律","規定","国際"
+  ];
+
+  // 「FXスポット（直物為替）」のような用語名から、実際の語として使われうる
+  // 部分（見出し語と、カッコ内の別名・読み替え）を取り出す。
+  function extractCoreTermWords(t){
+    var out = [];
+    var m = t.match(/^([^（(]+)[（(]([^）)]+)[）)]/);
+    if(m){
+      var head = m[1].trim();
+      if(head) out.push(head);
+      m[2].split(/[・\/、,]/).forEach(function(s){ s = s.trim(); if(s) out.push(s); });
+    } else {
+      var whole = t.trim();
+      if(whole) out.push(whole);
+    }
+    return out;
+  }
+
+  function buildBlankDictionary(list){
+    var dict = new Set(BLANK_ATOMIC_WORDS);
+    list.forEach(function(g){
+      extractCoreTermWords(g.t).forEach(function(w){
+        if(w.length >= 2) dict.add(w);
+      });
+    });
+    return dict;
+  }
+
+  // 辞書に載っている単語だけを使って、貪欲最長一致で連なりを分割する。
+  // 辞書に無い文字が残る場合は分割できないものとして null を返す
+  // （＝意味の異なる語同士がくっついたまま穴埋めにするのを避ける）。
+  function splitKnownWords(run, dict){
+    var i = 0, out = [];
+    while(i < run.length){
+      var matched = null;
+      for(var len = Math.min(8, run.length - i); len >= 2; len--){
+        var cand = run.substr(i, len);
+        if(dict.has(cand)){ matched = cand; break; }
+      }
+      if(!matched) return null;
+      out.push(matched);
+      i += matched.length;
+    }
+    return out;
+  }
+
+  // 定義文から穴埋め候補となる単語を抽出する。
+  // 3文字以下、または辞書に登録済みの語（＝1つの概念とみなせる語）はそのまま
+  // 候補にする。それより長い漢字だけの連なりは、辞書語の組み合わせに分割
+  // できた場合のみ各語を候補にし、分割できなければ候補にしない。
+  function extractBlankCandidates(def, dict){
+    var runs = Array.from(new Set(def.match(BLANK_WORD_RE) || []));
+    // 数字だけの候補（年数・件数など）は語彙の穴埋めとして不適切なため除外する
+    runs = runs.filter(function(w){ return !/^[0-9]+$/.test(w); });
+    var out = [];
+    runs.forEach(function(run){
+      if(run.length <= 3 || dict.has(run) || !/^[一-鿿]+$/.test(run)){
+        out.push(run);
+      } else {
+        var parts = splitKnownWords(run, dict);
+        if(parts) parts.forEach(function(p){ out.push(p); });
+      }
+    });
+    return Array.from(new Set(out));
+  }
 
   // 用語集全体の定義文における単語の出現頻度（DF）を数える。
   // 「取引」「仕組み」のようにどの定義文にも出てくる一般語ほど値が大きくなる。
-  function buildDefWordFrequency(list){
+  function buildDefWordFrequency(list, dict){
     var freq = new Map();
     list.forEach(function(g){
-      var words = new Set(g.d.match(BLANK_WORD_RE) || []);
+      var words = new Set(extractBlankCandidates(g.d, dict));
       words.forEach(function(w){ freq.set(w, (freq.get(w) || 0) + 1); });
     });
     return freq;
   }
 
-  function pickBlankWord(def, freq){
-    var matches = Array.from(new Set(def.match(BLANK_WORD_RE) || []));
+  function pickBlankWord(def, freq, dict){
+    var matches = extractBlankCandidates(def, dict);
     var cands = matches.filter(function(w){ return !BLANK_STOPWORDS.has(w); });
     if(cands.length === 0) cands = matches;
     if(cands.length === 0) return null;
@@ -1629,7 +1709,8 @@
 
   function buildQuestions(pool, count, mode, fixedTypes){
     var chosen = shuffle(pool).slice(0, count);
-    var blankFreq = buildDefWordFrequency(GLOSSARY);
+    var blankDict = buildBlankDictionary(GLOSSARY);
+    var blankFreq = buildDefWordFrequency(GLOSSARY, blankDict);
     return chosen.map(function(g){
       var type = mode;
       if(mode === "mixed"){
@@ -1637,7 +1718,7 @@
         type = (fixedTypes && fixedTypes[g.id]) || MIXED_TYPES[Math.floor(Math.random() * MIXED_TYPES.length)];
       }
       if(type === "fillblank"){
-        var blankWord = pickBlankWord(g.d, blankFreq);
+        var blankWord = pickBlankWord(g.d, blankFreq, blankDict);
         var masked = blankWord ? maskDefinition(g.d, blankWord) : null;
         if(masked){
           return {term:g, type:type, blankWord:blankWord, masked:masked, correctTerm:g};
