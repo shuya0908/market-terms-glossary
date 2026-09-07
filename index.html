@@ -1710,9 +1710,14 @@
   }
 
   function buildQuestions(pool, count, mode, fixedTypes){
-    var chosen = shuffle(pool).slice(0, count);
     var blankDict = buildBlankDictionary(GLOSSARY);
     var blankFreq = buildDefWordFrequency(GLOSSARY, blankDict);
+    // 「穴埋めのみ」モードでは、穴埋め候補語が無い用語をそもそも出題対象から除外する
+    // （候補が無い場合に他形式へ差し替えるフォールバックは mixed モード用に残す）
+    var eligiblePool = mode === "fillblank"
+      ? pool.filter(function(g){ return !!pickBlankWord(g.d, blankFreq, blankDict); })
+      : pool;
+    var chosen = shuffle(eligiblePool).slice(0, count);
     return chosen.map(function(g){
       var type = mode;
       if(mode === "mixed"){
@@ -1749,8 +1754,13 @@
     var pool = GLOSSARY.filter(function(g){ return quizActiveCats.has(g.c); });
     var count = Math.min(parseInt(document.getElementById("qCount").value, 10), pool.length);
     var mode = document.getElementById("qMode").value;
+    var questions = buildQuestions(pool, count, mode);
+    if(mode === "fillblank" && questions.length === 0){
+      setupWarn.textContent = "選択したカテゴリには穴埋め形式で出題できる用語がありません。カテゴリを増やすか、別の出題形式を選んでください。";
+      return;
+    }
     quiz = {
-      questions: buildQuestions(pool, count, mode),
+      questions: questions,
       index: 0,
       correct: 0,
       results: [],
