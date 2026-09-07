@@ -1581,17 +1581,33 @@
   }
 
   var BLANK_STOPWORDS = new Set([
-    "一定","場合","状態","以上","以下","状況","情報","こと","もの","ため",
+    "一定","場合","状態","以上","以下","状況","情報",
     "各種","可能","不可","対象","一部","全体","通常","一般"
   ]);
+  var BLANK_WORD_RE = /[一-鿿ァ-ヺーa-zA-Z0-9]{2,}/g;
 
-  function pickBlankWord(def){
-    var matches = def.match(/[一-鿿ァ-ヺーa-zA-Z0-9]{2,}/g) || [];
+  // 用語集全体の定義文における単語の出現頻度（DF）を数える。
+  // 「取引」「仕組み」のようにどの定義文にも出てくる一般語ほど値が大きくなる。
+  function buildDefWordFrequency(list){
+    var freq = new Map();
+    list.forEach(function(g){
+      var words = new Set(g.d.match(BLANK_WORD_RE) || []);
+      words.forEach(function(w){ freq.set(w, (freq.get(w) || 0) + 1); });
+    });
+    return freq;
+  }
+
+  function pickBlankWord(def, freq){
+    var matches = Array.from(new Set(def.match(BLANK_WORD_RE) || []));
     var cands = matches.filter(function(w){ return !BLANK_STOPWORDS.has(w); });
     if(cands.length === 0) cands = matches;
     if(cands.length === 0) return null;
-    var preferred = cands.filter(function(w){ return w.length <= 10; });
-    var pool = preferred.length ? preferred : cands;
+    // 他の用語の説明にも頻出する一般語ではなく、この用語に固有で説明力の高い語を優先する
+    var dfOf = function(w){ return (freq && freq.get(w)) || 1; };
+    var minDf = Math.min.apply(null, cands.map(dfOf));
+    var distinctive = cands.filter(function(w){ return dfOf(w) <= minDf + 1; });
+    var preferred = distinctive.filter(function(w){ return w.length <= 10; });
+    var pool = preferred.length ? preferred : distinctive;
     return pool[Math.floor(Math.random() * pool.length)];
   }
 
@@ -1613,6 +1629,7 @@
 
   function buildQuestions(pool, count, mode, fixedTypes){
     var chosen = shuffle(pool).slice(0, count);
+    var blankFreq = buildDefWordFrequency(GLOSSARY);
     return chosen.map(function(g){
       var type = mode;
       if(mode === "mixed"){
@@ -1620,7 +1637,7 @@
         type = (fixedTypes && fixedTypes[g.id]) || MIXED_TYPES[Math.floor(Math.random() * MIXED_TYPES.length)];
       }
       if(type === "fillblank"){
-        var blankWord = pickBlankWord(g.d);
+        var blankWord = pickBlankWord(g.d, blankFreq);
         var masked = blankWord ? maskDefinition(g.d, blankWord) : null;
         if(masked){
           return {term:g, type:type, blankWord:blankWord, masked:masked, correctTerm:g};
