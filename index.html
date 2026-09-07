@@ -1599,8 +1599,38 @@
     "対象","目的","範囲","内容","方法","状態","要件","処理","調達","発行","償還",
     "通貨","証券","銀行","保険","委員会","規則","監督","当局","商品","研究所",
     "運用","資産","負債","元本","削減","転換","株式","加重","平均","急激",
-    "機能","停止","緊急","総額","時価","日本","協定","法律","規定","国際"
+    "機能","停止","緊急","総額","時価","日本","協定","法律","規定","国際",
+    "空売り","値動き"
   ];
+
+  // 定義文中で、切り出した漢字の連なりの直後にひらがなが続くケースには2種類ある。
+  // (1)「板寄せ」のように送り仮名まで含めて初めて1つの意味になる語を、
+  //     漢字だけの連なりとして途中で切ってしまっている場合
+  // (2)「将来生じ得る」のように、無関係な2つの語（「将来」＋「生じる」）が
+  //     たまたま連続しているだけなのに、1つの語として誤って切り出してしまう場合
+  // (1) は辞書中の語まで延長できないか試し、(2) のうち実際に確認できた
+  // 誤った組み合わせは BLANK_BROKEN_WORDS で明示的に除外する。
+  var BLANK_BROKEN_WORDS = new Set(["将来生","随時付","一時止","追加差"]);
+
+  function isFollowedByHiragana(def, run){
+    var idx = -1;
+    while((idx = def.indexOf(run, idx + 1)) !== -1){
+      if(/^[ぁ-ゖ]/.test(def.charAt(idx + run.length))) return true;
+    }
+    return false;
+  }
+
+  function extendIntoOkurigana(def, run, dict){
+    var idx = -1;
+    while((idx = def.indexOf(run, idx + 1)) !== -1){
+      var tail = def.slice(idx + run.length, idx + run.length + 3);
+      for(var k = tail.length; k >= 1; k--){
+        var cand = run + tail.slice(0, k);
+        if(dict.has(cand)) return cand;
+      }
+    }
+    return null;
+  }
 
   // 「FXスポット（直物為替）」のような用語名から、実際の語として使われうる
   // 部分（見出し語と、カッコ内の別名・読み替え）を取り出す。
@@ -1656,12 +1686,22 @@
     runs = runs.filter(function(w){ return !/^[0-9]+$/.test(w); });
     var out = [];
     runs.forEach(function(run){
-      if(run.length <= 3 || dict.has(run) || !/^[一-鿿]+$/.test(run)){
+      var isKanjiOnly = /^[一-鿿]+$/.test(run);
+      if(!isKanjiOnly || dict.has(run)){
         out.push(run);
-      } else {
-        var parts = splitKnownWords(run, dict);
-        if(parts) parts.forEach(function(p){ out.push(p); });
+        return;
       }
+      if(run.length <= 3){
+        if(isFollowedByHiragana(def, run)){
+          if(BLANK_BROKEN_WORDS.has(run)) return;
+          var extended = extendIntoOkurigana(def, run, dict);
+          if(extended){ out.push(extended); return; }
+        }
+        out.push(run);
+        return;
+      }
+      var parts = splitKnownWords(run, dict);
+      if(parts) parts.forEach(function(p){ out.push(p); });
     });
     // 3文字以上の単語は候補として残す。2文字の単語は学習効果が薄い
     // ものが多いため、次の2条件をどちらも満たす場合のみ候補として残す。
