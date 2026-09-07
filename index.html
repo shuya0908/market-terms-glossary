@@ -1580,9 +1580,28 @@
     return a;
   }
 
+  // 穴埋めの答えとして出題しない語。判断基準は「その用語を理解している人が、
+  // 空欄に入る語をこの1語に特定できるか」で、同義語がいくつも成立する語は
+  // 正誤判定が学習の役に立たないため除外する。
   var BLANK_STOPWORDS = new Set([
-    "一定","場合","状態","以上","以下","状況","情報",
-    "各種","可能","不可","対象","一部","全体","通常","一般"
+    // どの用語の説明にも当てはまる汎用語
+    "一定","場合","状態","以上","以下","状況","情報","各種","可能","不可",
+    "対象","一部","全体","通常","一般","内容","目的","手段","部分","処理",
+    "機能","条件","基準","単位","方式","割合","商品","日本","国際",
+    "必要額","想定外","代表例","変更幅","授受額","元本額","依存度","簡略化",
+    "役職員","本契約","両通貨","不適切","高性能","値段順","市場系",
+    "ルール","カバー","グループ","マイクロ",
+    // 「〜的」の修飾語（別の修飾語でも文が成立してしまう）
+    "一時的","中心的","中核的","効率的","国際的","基本的","実質的","数値的",
+    "標準的","段階的","相対的","統一的","統計的","自動的","解析的","逐次的",
+    "電子的","平均的","時間的","強制的","確率的","連続的",
+    // 位置・時点の接尾辞が付いただけの語（学習者は接尾辞なしで答えてしまう）
+    "満期時","発行時","発注時","売買時","超過時","期間内","条件下","時間外",
+    "帳簿上","規制上","公表前","通貨間","各時点","段階分",
+    // 「〜等」（「等」を付けるかどうかは恣意的で、正解を特定できない）
+    "原則等","市場等","株式等","記号等",
+    // 回数・期間を表すだけの語
+    "多数回","複数回","短時間","短期間","秒単位"
   ]);
   // 漢字・カタカナ・アルファベット・数字の文字種をまたいで連結しないよう、
   // 文字種ごとに独立したパターンでまとめる（例：「2営業日後」を1語として
@@ -1599,8 +1618,41 @@
     "対象","目的","範囲","内容","方法","状態","要件","処理","調達","発行","償還",
     "通貨","証券","銀行","保険","委員会","規則","監督","当局","商品","研究所",
     "運用","資産","負債","元本","削減","転換","株式","加重","平均","急激",
-    "機能","停止","緊急","総額","時価","日本","協定","法律","規定","国際"
+    "機能","停止","緊急","総額","時価","日本","協定","法律","規定","国際",
+    "空売り","値動き","担保付き","条件付き","通貨建て"
   ];
+
+  // 定義文中で、切り出した漢字の連なりの直後にひらがなが続くケースには2種類ある。
+  // (1)「板寄せ」「担保付き」のように送り仮名まで含めて初めて1つの意味になる語を、
+  //     漢字だけの連なりとして途中で切ってしまっている場合
+  // (2)「将来生じ得る」「1段階上げる」のように、無関係な2つの語（「将来」＋
+  //     「生じる」、「段階」＋「上げる」）がたまたま連続しているだけなのに、
+  //     1つの語として誤って切り出してしまう場合
+  // (1) は辞書中の語まで延長できないか試し、(2) のうち実際に確認できた
+  // 誤った組み合わせは BLANK_BROKEN_WORDS で明示的に除外する。
+  // 「年以内」のように、直前の数字（穴埋め候補としては別途除外済み）が
+  // ないと意味をなさない語も、同様に BLANK_BROKEN_WORDS で除外する。
+  var BLANK_BROKEN_WORDS = new Set(["将来生","随時付","一時止","追加差","段階上","年以内"]);
+
+  function isFollowedByHiragana(def, run){
+    var idx = -1;
+    while((idx = def.indexOf(run, idx + 1)) !== -1){
+      if(/^[ぁ-ゖ]/.test(def.charAt(idx + run.length))) return true;
+    }
+    return false;
+  }
+
+  function extendIntoOkurigana(def, run, dict){
+    var idx = -1;
+    while((idx = def.indexOf(run, idx + 1)) !== -1){
+      var tail = def.slice(idx + run.length, idx + run.length + 3);
+      for(var k = tail.length; k >= 1; k--){
+        var cand = run + tail.slice(0, k);
+        if(dict.has(cand)) return cand;
+      }
+    }
+    return null;
+  }
 
   // 「FXスポット（直物為替）」のような用語名から、実際の語として使われうる
   // 部分（見出し語と、カッコ内の別名・読み替え）を取り出す。
@@ -1656,12 +1708,22 @@
     runs = runs.filter(function(w){ return !/^[0-9]+$/.test(w); });
     var out = [];
     runs.forEach(function(run){
-      if(run.length <= 3 || dict.has(run) || !/^[一-鿿]+$/.test(run)){
+      var isKanjiOnly = /^[一-鿿]+$/.test(run);
+      if(!isKanjiOnly || dict.has(run)){
         out.push(run);
-      } else {
-        var parts = splitKnownWords(run, dict);
-        if(parts) parts.forEach(function(p){ out.push(p); });
+        return;
       }
+      if(run.length <= 3){
+        if(isFollowedByHiragana(def, run)){
+          if(BLANK_BROKEN_WORDS.has(run)) return;
+          var extended = extendIntoOkurigana(def, run, dict);
+          if(extended){ out.push(extended); return; }
+        }
+        out.push(run);
+        return;
+      }
+      var parts = splitKnownWords(run, dict);
+      if(parts) parts.forEach(function(p){ out.push(p); });
     });
     // 3文字以上の単語は候補として残す。2文字の単語は学習効果が薄い
     // ものが多いため、次の2条件をどちらも満たす場合のみ候補として残す。
@@ -1692,10 +1754,16 @@
     return freq;
   }
 
-  function pickBlankWord(def, freq, dict){
-    var matches = extractBlankCandidates(def, dict);
-    var cands = matches.filter(function(w){ return !BLANK_STOPWORDS.has(w); });
-    if(cands.length === 0) cands = matches;
+  // 穴埋めの答えとする語を選ぶ。候補が残らない用語は null を返し、
+  // 呼び出し側で穴埋め以外の形式に差し替える（無理に出題しない）。
+  function pickBlankWord(term, freq, dict){
+    var matches = extractBlankCandidates(term.d, dict);
+    var cands = matches.filter(function(w){
+      if(BLANK_STOPWORDS.has(w)) return false;
+      // 用語名に含まれる語は、画面に表示されている見出しを写すだけで答えられる
+      // （例：「変動証拠金」の説明で「証拠金」を空欄にする）ため出題しない。
+      return term.t.indexOf(w) === -1;
+    });
     if(cands.length === 0) return null;
     // 他の用語の説明にも頻出する一般語ではなく、この用語に固有で説明力の高い語を優先する
     var dfOf = function(w){ return (freq && freq.get(w)) || 1; };
@@ -1728,7 +1796,7 @@
     // 「穴埋めのみ」モードでは、穴埋め候補語が無い用語をそもそも出題対象から除外する
     // （候補が無い場合に他形式へ差し替えるフォールバックは mixed モード用に残す）
     var eligiblePool = mode === "fillblank"
-      ? pool.filter(function(g){ return !!pickBlankWord(g.d, blankFreq, blankDict); })
+      ? pool.filter(function(g){ return !!pickBlankWord(g, blankFreq, blankDict); })
       : pool;
     var chosen = shuffle(eligiblePool).slice(0, count);
     return chosen.map(function(g){
@@ -1738,7 +1806,7 @@
         type = (fixedTypes && fixedTypes[g.id]) || MIXED_TYPES[Math.floor(Math.random() * MIXED_TYPES.length)];
       }
       if(type === "fillblank"){
-        var blankWord = pickBlankWord(g.d, blankFreq, blankDict);
+        var blankWord = pickBlankWord(g, blankFreq, blankDict);
         var masked = blankWord ? maskDefinition(g.d, blankWord) : null;
         if(masked){
           return {term:g, type:type, blankWord:blankWord, masked:masked, correctTerm:g};
