@@ -1663,8 +1663,12 @@
         if(parts) parts.forEach(function(p){ out.push(p); });
       }
     });
-    // 2文字以下の単語は穴埋めにしても学習効果が薄いため候補から除外する
-    out = out.filter(function(w){ return w.length >= 3; });
+    // 3文字以上の単語は候補として残す。2文字の単語は、「場合」「状態」の
+    // ようなありふれた語（BLANK_STOPWORDS）は学習効果が薄いため除外し、
+    // それ以外（用語固有で説明力の高い語）は候補として残す。
+    out = out.filter(function(w){
+      return w.length >= 3 || (w.length === 2 && !BLANK_STOPWORDS.has(w));
+    });
     return Array.from(new Set(out));
   }
 
