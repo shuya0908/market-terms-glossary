@@ -1663,8 +1663,21 @@
         if(parts) parts.forEach(function(p){ out.push(p); });
       }
     });
-    // 2文字以下の単語は穴埋めにしても学習効果が薄いため候補から除外する
-    out = out.filter(function(w){ return w.length >= 3; });
+    // 3文字以上の単語は候補として残す。2文字の単語は学習効果が薄い
+    // ものが多いため、次の2条件をどちらも満たす場合のみ候補として残す。
+    // ・英字だけの2文字（"at"「Value at Risk」や"or"「Fill or Kill」
+    //   のように、英語表記の一部が偶然2文字で区切られただけの断片で
+    //   あることが多く、単語として意味を持たないため）ではないこと
+    // ・辞書に登録済みの語（＝用語名やBLANK_ATOMIC_WORDSとして
+    //   1つの概念と認められている語）であること。送り仮名の欠落や
+    //   中黒（・）区切りによる誤った断片（「空売り」→「空売」、
+    //   「パー・レート」→「パー」等）は辞書に存在しないため、この
+    //   条件により自動的に除外される。
+    out = out.filter(function(w){
+      if(w.length >= 3) return true;
+      if(/^[a-zA-Z]+$/.test(w)) return false;
+      return dict.has(w);
+    });
     return Array.from(new Set(out));
   }
 
