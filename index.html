@@ -332,6 +332,7 @@
   }
   .changelog-type.correction{background:var(--danger-soft);color:var(--danger-ink);}
   .changelog-type.addition{background:var(--success-soft);color:var(--success-ink);}
+  .changelog-type.deletion{background:var(--surface-alt);color:var(--ink-muted);}
   .changelog-term{font-family:var(--font-display);font-weight:700;font-size:1rem;margin:0 0 8px;}
   .changelog-diff{font-size:.85rem;line-height:1.75;margin:0 0 6px;}
   .changelog-diff .before{color:var(--danger-ink);background:var(--danger-soft);text-decoration:line-through;text-decoration-color:var(--danger);padding:1px 3px;border-radius:3px;display:block;margin-bottom:4px;}
@@ -1321,10 +1322,11 @@
 
   /* ---------- changelog (修正履歴) ---------- */
   // Loaded from changelog.json alongside terms.json. Each entry records a
-  // correction to an existing term's definition, or an addition of a new
-  // (usually related) term made as a consequence of such a correction.
+  // correction to an existing term's definition, an addition of a new
+  // (usually related) term made as a consequence of such a correction, or
+  // the removal of an existing term from terms.json.
   // See CLAUDE.md "修正履歴（CHANGELOGタブ）の運用" for the authoring rules.
-  var CHANGELOG_TYPE_LABEL = { correction: "修正", addition: "追加" };
+  var CHANGELOG_TYPE_LABEL = { correction: "修正", addition: "追加", deletion: "削除" };
   var changelogEntries = [];
   var changelogListEl = document.getElementById("changelogList");
   var changelogEmptyEl = document.getElementById("changelogEmpty");
@@ -1354,9 +1356,14 @@
       item.className = "changelog-item";
       if(cat) item.style.setProperty("--h", cat.hue);
       var typeLabel = CHANGELOG_TYPE_LABEL[entry.type] || entry.type;
-      var diffHtml = entry.type === "correction" && entry.before
-        ? '<p class="changelog-diff"><span class="before">'+escapeHtml(entry.before)+'</span><span class="after">'+escapeHtml(entry.after)+'</span></p>'
-        : '<p class="changelog-diff"><span class="after">'+escapeHtml(entry.after)+'</span></p>';
+      var diffHtml;
+      if(entry.type === "correction" && entry.before){
+        diffHtml = '<p class="changelog-diff"><span class="before">'+escapeHtml(entry.before)+'</span><span class="after">'+escapeHtml(entry.after)+'</span></p>';
+      } else if(entry.type === "deletion"){
+        diffHtml = '<p class="changelog-diff"><span class="before">'+escapeHtml(entry.before)+'</span></p>';
+      } else {
+        diffHtml = '<p class="changelog-diff"><span class="after">'+escapeHtml(entry.after)+'</span></p>';
+      }
       item.innerHTML =
         '<div class="changelog-top">' +
           '<div class="changelog-top-left">' +
