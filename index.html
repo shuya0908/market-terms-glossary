@@ -315,6 +315,29 @@
   .marked-header .count{font-family:var(--font-mono);font-size:.82rem;color:var(--ink-muted);font-variant-numeric:tabular-nums;}
   .tab-count{font-family:var(--font-mono);font-size:.7rem;opacity:.8;margin-left:2px;}
 
+  .changelog-list{display:flex;flex-direction:column;gap:14px;}
+  .changelog-item{
+    border:1px solid var(--border);
+    border-left:3px solid hsl(var(--h) var(--chip-bg-s) 44%);
+    border-radius:4px;
+    padding:15px 16px;
+    background:var(--surface);
+  }
+  .changelog-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;}
+  .changelog-top-left{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .changelog-date{font-family:var(--font-mono);font-size:.78rem;color:var(--ink-muted);}
+  .changelog-type{
+    font-size:.68rem;font-family:var(--font-mono);letter-spacing:.03em;
+    padding:2px 8px;border-radius:999px;white-space:nowrap;
+  }
+  .changelog-type.correction{background:var(--danger-soft);color:var(--danger-ink);}
+  .changelog-type.addition{background:var(--success-soft);color:var(--success-ink);}
+  .changelog-term{font-family:var(--font-display);font-weight:700;font-size:1rem;margin:0 0 8px;}
+  .changelog-diff{font-size:.85rem;line-height:1.75;margin:0 0 6px;}
+  .changelog-diff .before{color:var(--danger-ink);background:var(--danger-soft);text-decoration:line-through;text-decoration-color:var(--danger);padding:1px 3px;border-radius:3px;display:block;margin-bottom:4px;}
+  .changelog-diff .after{color:var(--success-ink);background:var(--success-soft);padding:1px 3px;border-radius:3px;display:block;}
+  .changelog-reason{font-size:.82rem;color:var(--ink-muted);line-height:1.7;margin:6px 0 0;}
+
   .refs{margin-top:34px;padding-top:20px;border-top:1px solid var(--border);}
   .refs h2{font-family:var(--font-display);font-size:.95rem;margin:0 0 10px;}
   .refs ul{margin:0;padding-left:1.2em;color:var(--ink-muted);font-size:.85rem;line-height:1.9;}
@@ -507,6 +530,9 @@
     </button>
     <button class="tab" id="tabQuizBtn" role="tab" aria-selected="false" aria-controls="panelQuiz">
       <span class="jp">問題演習</span><span class="en">QUIZ</span>
+    </button>
+    <button class="tab" id="tabChangelogBtn" role="tab" aria-selected="false" aria-controls="panelChangelog">
+      <span class="jp">修正履歴</span><span class="en">CHANGELOG</span>
     </button>
   </div>
 
@@ -963,6 +989,12 @@
 
   </div>
 
+  <div class="panel" id="panelChangelog" role="tabpanel" aria-labelledby="tabChangelogBtn" hidden>
+    <p class="lead">用語集（<code>terms.json</code>）に加えた既存用語の修正・関連用語の追加を、日付つきで記録しています。用語集本体には現在の内容のみが載るため、何をいつ・なぜ直したかはここで追えます。</p>
+    <div class="changelog-list" id="changelogList"></div>
+    <div class="empty" id="changelogEmpty" hidden>まだ修正履歴はありません。</div>
+  </div>
+
   <div class="backup-bar">
     <p class="backup-note">マーク・クイズ成績・追加した用語は、このブラウザにのみ保存されます。ブラウザの設定などにより保存内容が消えることがあるため、定期的にバックアップの保存をおすすめします。</p>
     <div class="backup-actions">
@@ -1240,10 +1272,11 @@
 
   /* ---------- tabs ---------- */
   var TABS = {
-    glossary: { btn: document.getElementById("tabGlossaryBtn"), panel: document.getElementById("panelGlossary") },
-    diagrams: { btn: document.getElementById("tabDiagramsBtn"), panel: document.getElementById("panelDiagrams") },
-    marked:   { btn: document.getElementById("tabMarkedBtn"),   panel: document.getElementById("panelMarked")   },
-    quiz:     { btn: document.getElementById("tabQuizBtn"),     panel: document.getElementById("panelQuiz")     }
+    glossary:   { btn: document.getElementById("tabGlossaryBtn"),   panel: document.getElementById("panelGlossary")   },
+    diagrams:   { btn: document.getElementById("tabDiagramsBtn"),   panel: document.getElementById("panelDiagrams")   },
+    marked:     { btn: document.getElementById("tabMarkedBtn"),     panel: document.getElementById("panelMarked")     },
+    quiz:       { btn: document.getElementById("tabQuizBtn"),       panel: document.getElementById("panelQuiz")       },
+    changelog:  { btn: document.getElementById("tabChangelogBtn"),  panel: document.getElementById("panelChangelog")  }
   };
   function showTab(name){
     Object.keys(TABS).forEach(function(key){
@@ -1253,11 +1286,66 @@
     });
     if(name === "marked") renderMarked();
     if(name === "glossary") renderGlossary();
+    if(name === "changelog") renderChangelog();
   }
   TABS.glossary.btn.addEventListener("click", function(){ showTab("glossary"); });
   TABS.diagrams.btn.addEventListener("click", function(){ showTab("diagrams"); });
   TABS.marked.btn.addEventListener("click", function(){ showTab("marked"); });
   TABS.quiz.btn.addEventListener("click", function(){ showTab("quiz"); });
+  TABS.changelog.btn.addEventListener("click", function(){ showTab("changelog"); });
+
+  /* ---------- changelog (修正履歴) ---------- */
+  // Loaded from changelog.json alongside terms.json. Each entry records a
+  // correction to an existing term's definition, or an addition of a new
+  // (usually related) term made as a consequence of such a correction.
+  // See CLAUDE.md "修正履歴（CHANGELOGタブ）の運用" for the authoring rules.
+  var CHANGELOG_TYPE_LABEL = { correction: "修正", addition: "追加" };
+  var changelogEntries = [];
+  var changelogListEl = document.getElementById("changelogList");
+  var changelogEmptyEl = document.getElementById("changelogEmpty");
+  var changelogRendered = false;
+  fetch("changelog.json")
+    .then(function(res){ return res.ok ? res.json() : []; })
+    .then(function(entries){ changelogEntries = entries || []; if(changelogRendered) renderChangelog(); })
+    .catch(function(err){ console.error("修正履歴の読み込みに失敗しました。", err); });
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c];
+    });
+  }
+  function renderChangelog(){
+    changelogRendered = true;
+    changelogListEl.innerHTML = "";
+    // Newest first; entries sharing a date keep their most-recently-appended-last
+    // order reversed, so later edits on the same day still sort above earlier ones.
+    var sorted = changelogEntries.slice().sort(function(a, b){
+      return b.date === a.date ? 0 : (b.date > a.date ? 1 : -1);
+    });
+    changelogEmptyEl.hidden = sorted.length > 0;
+    sorted.forEach(function(entry){
+      var cat = CATS[entry.c];
+      var item = document.createElement("div");
+      item.className = "changelog-item";
+      if(cat) item.style.setProperty("--h", cat.hue);
+      var typeLabel = CHANGELOG_TYPE_LABEL[entry.type] || entry.type;
+      var diffHtml = entry.type === "correction" && entry.before
+        ? '<p class="changelog-diff"><span class="before">'+escapeHtml(entry.before)+'</span><span class="after">'+escapeHtml(entry.after)+'</span></p>'
+        : '<p class="changelog-diff"><span class="after">'+escapeHtml(entry.after)+'</span></p>';
+      item.innerHTML =
+        '<div class="changelog-top">' +
+          '<div class="changelog-top-left">' +
+            '<span class="changelog-date">'+escapeHtml(entry.date)+'</span>' +
+            '<span class="changelog-type '+escapeHtml(entry.type || "")+'">'+escapeHtml(typeLabel)+'</span>' +
+            (cat ? '<span class="tag">'+escapeHtml(cat.label)+'</span>' : '') +
+          '</div>' +
+        '</div>' +
+        '<p class="changelog-term">'+escapeHtml(entry.term)+'</p>' +
+        diffHtml +
+        (entry.reason ? '<p class="changelog-reason">'+escapeHtml(entry.reason)+'</p>' : '');
+      changelogListEl.appendChild(item);
+    });
+  }
 
   /* ---------- marks (watchlist) ---------- */
   // Marks are keyed by stable term id. Older saved marks (from before terms had
