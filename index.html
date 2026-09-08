@@ -531,6 +531,9 @@
     <button class="tab" id="tabQuizBtn" role="tab" aria-selected="false" aria-controls="panelQuiz">
       <span class="jp">問題演習</span><span class="en">QUIZ</span>
     </button>
+    <button class="tab" id="tabManageBtn" role="tab" aria-selected="false" aria-controls="panelManage">
+      <span class="jp">管理</span><span class="en">MANAGE</span>
+    </button>
     <button class="tab" id="tabChangelogBtn" role="tab" aria-selected="false" aria-controls="panelChangelog">
       <span class="jp">修正履歴</span><span class="en">CHANGELOG</span>
     </button>
@@ -541,7 +544,6 @@
     <div class="controls">
       <div class="search-row">
         <input type="search" id="search" placeholder="用語・定義をキーワード検索…" aria-label="用語検索">
-        <button type="button" class="btn ghost small" id="addTermBtn">＋ 用語を追加</button>
         <span class="count" id="count"></span>
       </div>
       <div class="cat-actions">
@@ -989,6 +991,25 @@
 
   </div>
 
+  <div class="panel" id="panelManage" role="tabpanel" aria-labelledby="tabManageBtn" hidden>
+
+    <div class="controls">
+      <div class="search-row">
+        <input type="search" id="manageSearch" placeholder="用語・定義をキーワード検索…" aria-label="用語検索（管理）">
+        <button type="button" class="btn ghost small" id="manageAddTermBtn">＋ 用語を追加</button>
+        <span class="count" id="manageCount"></span>
+      </div>
+      <div class="cat-actions">
+        <button type="button" class="btn-link" id="manageSelectAllCats">すべて選択</button>
+        <span class="sep">/</span>
+        <button type="button" class="btn-link" id="manageDeselectAllCats">すべて解除</button>
+      </div>
+      <div class="chiprow" id="manageCatFilter" role="group" aria-label="カテゴリで絞り込み"></div>
+    </div>
+    <div class="grid" id="manageGrid"></div>
+    <div class="empty" id="manageEmpty" hidden>該当する用語が見つかりませんでした。</div>
+  </div>
+
   <div class="panel" id="panelChangelog" role="tabpanel" aria-labelledby="tabChangelogBtn" hidden>
     <p class="lead">用語集（<code>terms.json</code>）に加えた既存用語の修正・関連用語の追加を、日付つきで記録しています。用語集本体には現在の内容のみが載るため、何をいつ・なぜ直したかはここで追えます。</p>
     <div class="changelog-list" id="changelogList"></div>
@@ -1153,6 +1174,7 @@
     totalCountEl.textContent = GLOSSARY.length;
     renderGlossary();
     if(!TABS.marked.panel.hidden) renderMarked();
+    if(!TABS.manage.panel.hidden) renderManage();
     updateMarkedTabCount();
   }
 
@@ -1230,7 +1252,7 @@
     });
   }
 
-  document.getElementById("addTermBtn").addEventListener("click", function(){ openTermModal(null); });
+  document.getElementById("manageAddTermBtn").addEventListener("click", function(){ openTermModal(null); });
   document.getElementById("tmCancelBtn").addEventListener("click", closeTermModal);
   termModalOverlay.addEventListener("click", function(e){
     if(e.target === termModalOverlay) closeTermModal();
@@ -1276,6 +1298,7 @@
     diagrams:   { btn: document.getElementById("tabDiagramsBtn"),   panel: document.getElementById("panelDiagrams")   },
     marked:     { btn: document.getElementById("tabMarkedBtn"),     panel: document.getElementById("panelMarked")     },
     quiz:       { btn: document.getElementById("tabQuizBtn"),       panel: document.getElementById("panelQuiz")       },
+    manage:     { btn: document.getElementById("tabManageBtn"),     panel: document.getElementById("panelManage")     },
     changelog:  { btn: document.getElementById("tabChangelogBtn"),  panel: document.getElementById("panelChangelog")  }
   };
   function showTab(name){
@@ -1286,12 +1309,14 @@
     });
     if(name === "marked") renderMarked();
     if(name === "glossary") renderGlossary();
+    if(name === "manage") renderManage();
     if(name === "changelog") renderChangelog();
   }
   TABS.glossary.btn.addEventListener("click", function(){ showTab("glossary"); });
   TABS.diagrams.btn.addEventListener("click", function(){ showTab("diagrams"); });
   TABS.marked.btn.addEventListener("click", function(){ showTab("marked"); });
   TABS.quiz.btn.addEventListener("click", function(){ showTab("quiz"); });
+  TABS.manage.btn.addEventListener("click", function(){ showTab("manage"); });
   TABS.changelog.btn.addEventListener("click", function(){ showTab("changelog"); });
 
   /* ---------- changelog (修正履歴) ---------- */
@@ -1400,38 +1425,55 @@
       totalCountEl.textContent = GLOSSARY.length;
       renderGlossary();
       if(!TABS.marked.panel.hidden) renderMarked();
+      if(!TABS.manage.panel.hidden) renderManage();
     }
   });
 
-  /* ---------- shared card builder ---------- */
+  /* ---------- shared card builder ----------
+     mode "browse" (default; used by the glossary/watchlist tabs) shows a
+     mark (☆/★) toggle. mode "manage" (used by the manage tab) shows
+     edit/delete actions instead -- term add/edit/delete is consolidated
+     into the manage tab, so browse-mode cards carry neither. */
   function createCard(g, opts){
     opts = opts || {};
+    var mode = opts.mode || "browse";
     var cat = CATS[g.c];
-    var marked = markedSet.has(g.id);
     var card = document.createElement("div");
     card.className = "card";
     card.style.setProperty("--h", cat.hue);
+
+    var topRightHtml = "";
+    if(mode === "browse"){
+      var marked = markedSet.has(g.id);
+      topRightHtml = '<button type="button" class="mark-btn" data-id="'+g.id+'" aria-pressed="'+marked+'" aria-label="'+g.t+'をマークする">'+(marked ? '★' : '☆')+'</button>';
+    }
+    var actionsHtml = mode === "manage"
+      ? '<div class="card-actions">' +
+          '<button type="button" class="btn-link edit-btn">編集</button>' +
+          '<span class="sep">/</span>' +
+          '<button type="button" class="btn-link delete-btn">削除</button>' +
+        '</div>'
+      : "";
+
     card.innerHTML =
       '<div class="card-top">' +
         '<span class="tag">'+cat.label+'</span>' +
-        '<button type="button" class="mark-btn" data-id="'+g.id+'" aria-pressed="'+marked+'" aria-label="'+g.t+'をマークする">'+(marked ? '★' : '☆')+'</button>' +
+        topRightHtml +
       '</div>' +
       '<div><p class="term">'+g.t+'</p><span class="kana">'+g.k+'</span></div>' +
       '<button type="button" class="def-toggle" aria-expanded="false">定義を見る ▾</button>' +
       '<p class="def" hidden>'+g.d+'</p>' +
-      '<div class="card-actions">' +
-        '<button type="button" class="btn-link edit-btn">編集</button>' +
-        '<span class="sep">/</span>' +
-        '<button type="button" class="btn-link delete-btn">削除</button>' +
-      '</div>';
+      actionsHtml;
 
-    var markBtn = card.querySelector(".mark-btn");
-    markBtn.addEventListener("click", function(){
-      var nowMarked = toggleMarkState(g.id);
-      markBtn.setAttribute("aria-pressed", nowMarked);
-      markBtn.textContent = nowMarked ? "★" : "☆";
-      if(opts.onMarkChange) opts.onMarkChange(nowMarked, card);
-    });
+    if(mode === "browse"){
+      var markBtn = card.querySelector(".mark-btn");
+      markBtn.addEventListener("click", function(){
+        var nowMarked = toggleMarkState(g.id);
+        markBtn.setAttribute("aria-pressed", nowMarked);
+        markBtn.textContent = nowMarked ? "★" : "☆";
+        if(opts.onMarkChange) opts.onMarkChange(nowMarked, card);
+      });
+    }
 
     var toggleBtn = card.querySelector(".def-toggle");
     var defEl = card.querySelector(".def");
@@ -1442,15 +1484,17 @@
       toggleBtn.textContent = expanded ? "定義を見る ▾" : "定義を隠す ▴";
     });
 
-    card.querySelector(".edit-btn").addEventListener("click", function(){
-      openTermModal(g);
-    });
-    card.querySelector(".delete-btn").addEventListener("click", async function(){
-      var ok = await showConfirm('「'+g.t+'」を削除しますか？', "削除する");
-      if(!ok) return;
-      deleteTermById(g.id);
-      refreshAfterCrud();
-    });
+    if(mode === "manage"){
+      card.querySelector(".edit-btn").addEventListener("click", function(){
+        openTermModal(g);
+      });
+      card.querySelector(".delete-btn").addEventListener("click", async function(){
+        var ok = await showConfirm('「'+g.t+'」を削除しますか？', "削除する");
+        if(!ok) return;
+        deleteTermById(g.id);
+        refreshAfterCrud();
+      });
+    }
 
     return card;
   }
@@ -1554,6 +1598,45 @@
     updateMarkedTabCount();
     renderMarked();
     renderGlossary();
+  });
+
+  /* ---------- manage (add / edit / delete) panel ----------
+     Term add/edit/delete is consolidated here rather than on the
+     glossary/watchlist cards themselves; see the "manage" mode of
+     createCard() above. */
+  var activeManageCats = new Set(Object.keys(CATS));
+  var manageCatFilterEl = document.getElementById("manageCatFilter");
+  var manageSearchEl = document.getElementById("manageSearch");
+  var manageGridEl = document.getElementById("manageGrid");
+  var manageCountEl = document.getElementById("manageCount");
+  var manageEmptyEl = document.getElementById("manageEmpty");
+
+  function renderManage(){
+    var q = manageSearchEl.value.trim().toLowerCase();
+    var items = GLOSSARY.filter(function(g){
+      if(!activeManageCats.has(g.c)) return false;
+      if(!q) return true;
+      return g.t.toLowerCase().indexOf(q) > -1 || g.k.toLowerCase().indexOf(q) > -1 || g.d.indexOf(q) > -1;
+    });
+    items = sortByCategory(items);
+    manageCountEl.textContent = items.length + " / " + GLOSSARY.length + " 語";
+    manageGridEl.innerHTML = "";
+    manageEmptyEl.hidden = items.length !== 0;
+    items.forEach(function(g){
+      manageGridEl.appendChild(createCard(g, {mode: "manage"}));
+    });
+  }
+  manageSearchEl.addEventListener("input", renderManage);
+  buildCatChips(manageCatFilterEl, activeManageCats, renderManage);
+  document.getElementById("manageSelectAllCats").addEventListener("click", function(){
+    Object.keys(CATS).forEach(function(key){ activeManageCats.add(key); });
+    manageCatFilterEl.querySelectorAll(".catchip").forEach(function(btn){ btn.setAttribute("aria-pressed", "true"); });
+    renderManage();
+  });
+  document.getElementById("manageDeselectAllCats").addEventListener("click", function(){
+    activeManageCats.clear();
+    manageCatFilterEl.querySelectorAll(".catchip").forEach(function(btn){ btn.setAttribute("aria-pressed", "false"); });
+    renderManage();
   });
 
   /* ---------- storage helper ---------- */
