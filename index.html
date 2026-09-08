@@ -315,6 +315,30 @@
   .marked-header .count{font-family:var(--font-mono);font-size:.82rem;color:var(--ink-muted);font-variant-numeric:tabular-nums;}
   .tab-count{font-family:var(--font-mono);font-size:.7rem;opacity:.8;margin-left:2px;}
 
+  .changelog-list{display:flex;flex-direction:column;gap:14px;}
+  .changelog-item{
+    border:1px solid var(--border);
+    border-left:3px solid hsl(var(--h) var(--chip-bg-s) 44%);
+    border-radius:4px;
+    padding:15px 16px;
+    background:var(--surface);
+  }
+  .changelog-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;}
+  .changelog-top-left{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .changelog-date{font-family:var(--font-mono);font-size:.78rem;color:var(--ink-muted);}
+  .changelog-type{
+    font-size:.68rem;font-family:var(--font-mono);letter-spacing:.03em;
+    padding:2px 8px;border-radius:999px;white-space:nowrap;
+  }
+  .changelog-type.correction{background:var(--danger-soft);color:var(--danger-ink);}
+  .changelog-type.addition{background:var(--success-soft);color:var(--success-ink);}
+  .changelog-type.deletion{background:var(--surface-alt);color:var(--ink-muted);}
+  .changelog-term{font-family:var(--font-display);font-weight:700;font-size:1rem;margin:0 0 8px;}
+  .changelog-diff{font-size:.85rem;line-height:1.75;margin:0 0 6px;}
+  .changelog-diff .before{color:var(--danger-ink);background:var(--danger-soft);text-decoration:line-through;text-decoration-color:var(--danger);padding:1px 3px;border-radius:3px;display:block;margin-bottom:4px;}
+  .changelog-diff .after{color:var(--success-ink);background:var(--success-soft);padding:1px 3px;border-radius:3px;display:block;}
+  .changelog-reason{font-size:.82rem;color:var(--ink-muted);line-height:1.7;margin:6px 0 0;}
+
   .refs{margin-top:34px;padding-top:20px;border-top:1px solid var(--border);}
   .refs h2{font-family:var(--font-display);font-size:.95rem;margin:0 0 10px;}
   .refs ul{margin:0;padding-left:1.2em;color:var(--ink-muted);font-size:.85rem;line-height:1.9;}
@@ -508,6 +532,12 @@
     <button class="tab" id="tabQuizBtn" role="tab" aria-selected="false" aria-controls="panelQuiz">
       <span class="jp">問題演習</span><span class="en">QUIZ</span>
     </button>
+    <button class="tab" id="tabManageBtn" role="tab" aria-selected="false" aria-controls="panelManage">
+      <span class="jp">管理</span><span class="en">MANAGE</span>
+    </button>
+    <button class="tab" id="tabChangelogBtn" role="tab" aria-selected="false" aria-controls="panelChangelog">
+      <span class="jp">修正履歴</span><span class="en">CHANGELOG</span>
+    </button>
   </div>
 
   <div class="panel" id="panelGlossary" role="tabpanel" aria-labelledby="tabGlossaryBtn">
@@ -515,7 +545,6 @@
     <div class="controls">
       <div class="search-row">
         <input type="search" id="search" placeholder="用語・定義をキーワード検索…" aria-label="用語検索">
-        <button type="button" class="btn ghost small" id="addTermBtn">＋ 用語を追加</button>
         <span class="count" id="count"></span>
       </div>
       <div class="cat-actions">
@@ -963,6 +992,31 @@
 
   </div>
 
+  <div class="panel" id="panelManage" role="tabpanel" aria-labelledby="tabManageBtn" hidden>
+
+    <div class="controls">
+      <div class="search-row">
+        <input type="search" id="manageSearch" placeholder="用語・定義をキーワード検索…" aria-label="用語検索（管理）">
+        <button type="button" class="btn ghost small" id="manageAddTermBtn">＋ 用語を追加</button>
+        <span class="count" id="manageCount"></span>
+      </div>
+      <div class="cat-actions">
+        <button type="button" class="btn-link" id="manageSelectAllCats">すべて選択</button>
+        <span class="sep">/</span>
+        <button type="button" class="btn-link" id="manageDeselectAllCats">すべて解除</button>
+      </div>
+      <div class="chiprow" id="manageCatFilter" role="group" aria-label="カテゴリで絞り込み"></div>
+    </div>
+    <div class="grid" id="manageGrid"></div>
+    <div class="empty" id="manageEmpty" hidden>該当する用語が見つかりませんでした。</div>
+  </div>
+
+  <div class="panel" id="panelChangelog" role="tabpanel" aria-labelledby="tabChangelogBtn" hidden>
+    <p class="lead">用語集（<code>terms.json</code>）に加えた既存用語の修正・関連用語の追加を、日付つきで記録しています。用語集本体には現在の内容のみが載るため、何をいつ・なぜ直したかはここで追えます。</p>
+    <div class="changelog-list" id="changelogList"></div>
+    <div class="empty" id="changelogEmpty" hidden>まだ修正履歴はありません。</div>
+  </div>
+
   <div class="backup-bar">
     <p class="backup-note">マーク・クイズ成績・追加した用語は、このブラウザにのみ保存されます。ブラウザの設定などにより保存内容が消えることがあるため、定期的にバックアップの保存をおすすめします。</p>
     <div class="backup-actions">
@@ -1121,6 +1175,7 @@
     totalCountEl.textContent = GLOSSARY.length;
     renderGlossary();
     if(!TABS.marked.panel.hidden) renderMarked();
+    if(!TABS.manage.panel.hidden) renderManage();
     updateMarkedTabCount();
   }
 
@@ -1198,7 +1253,7 @@
     });
   }
 
-  document.getElementById("addTermBtn").addEventListener("click", function(){ openTermModal(null); });
+  document.getElementById("manageAddTermBtn").addEventListener("click", function(){ openTermModal(null); });
   document.getElementById("tmCancelBtn").addEventListener("click", closeTermModal);
   termModalOverlay.addEventListener("click", function(e){
     if(e.target === termModalOverlay) closeTermModal();
@@ -1240,10 +1295,12 @@
 
   /* ---------- tabs ---------- */
   var TABS = {
-    glossary: { btn: document.getElementById("tabGlossaryBtn"), panel: document.getElementById("panelGlossary") },
-    diagrams: { btn: document.getElementById("tabDiagramsBtn"), panel: document.getElementById("panelDiagrams") },
-    marked:   { btn: document.getElementById("tabMarkedBtn"),   panel: document.getElementById("panelMarked")   },
-    quiz:     { btn: document.getElementById("tabQuizBtn"),     panel: document.getElementById("panelQuiz")     }
+    glossary:   { btn: document.getElementById("tabGlossaryBtn"),   panel: document.getElementById("panelGlossary")   },
+    diagrams:   { btn: document.getElementById("tabDiagramsBtn"),   panel: document.getElementById("panelDiagrams")   },
+    marked:     { btn: document.getElementById("tabMarkedBtn"),     panel: document.getElementById("panelMarked")     },
+    quiz:       { btn: document.getElementById("tabQuizBtn"),       panel: document.getElementById("panelQuiz")       },
+    manage:     { btn: document.getElementById("tabManageBtn"),     panel: document.getElementById("panelManage")     },
+    changelog:  { btn: document.getElementById("tabChangelogBtn"),  panel: document.getElementById("panelChangelog")  }
   };
   function showTab(name){
     Object.keys(TABS).forEach(function(key){
@@ -1253,11 +1310,74 @@
     });
     if(name === "marked") renderMarked();
     if(name === "glossary") renderGlossary();
+    if(name === "manage") renderManage();
+    if(name === "changelog") renderChangelog();
   }
   TABS.glossary.btn.addEventListener("click", function(){ showTab("glossary"); });
   TABS.diagrams.btn.addEventListener("click", function(){ showTab("diagrams"); });
   TABS.marked.btn.addEventListener("click", function(){ showTab("marked"); });
   TABS.quiz.btn.addEventListener("click", function(){ showTab("quiz"); });
+  TABS.manage.btn.addEventListener("click", function(){ showTab("manage"); });
+  TABS.changelog.btn.addEventListener("click", function(){ showTab("changelog"); });
+
+  /* ---------- changelog (修正履歴) ---------- */
+  // Loaded from changelog.json alongside terms.json. Each entry records a
+  // correction to an existing term's definition, an addition of a new
+  // (usually related) term made as a consequence of such a correction, or
+  // the removal of an existing term from terms.json.
+  // See CLAUDE.md "修正履歴（CHANGELOGタブ）の運用" for the authoring rules.
+  var CHANGELOG_TYPE_LABEL = { correction: "修正", addition: "追加", deletion: "削除" };
+  var changelogEntries = [];
+  var changelogListEl = document.getElementById("changelogList");
+  var changelogEmptyEl = document.getElementById("changelogEmpty");
+  var changelogRendered = false;
+  fetch("changelog.json")
+    .then(function(res){ return res.ok ? res.json() : []; })
+    .then(function(entries){ changelogEntries = entries || []; if(changelogRendered) renderChangelog(); })
+    .catch(function(err){ console.error("修正履歴の読み込みに失敗しました。", err); });
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c];
+    });
+  }
+  function renderChangelog(){
+    changelogRendered = true;
+    changelogListEl.innerHTML = "";
+    // Newest first; entries sharing a date keep their most-recently-appended-last
+    // order reversed, so later edits on the same day still sort above earlier ones.
+    var sorted = changelogEntries.slice().sort(function(a, b){
+      return b.date === a.date ? 0 : (b.date > a.date ? 1 : -1);
+    });
+    changelogEmptyEl.hidden = sorted.length > 0;
+    sorted.forEach(function(entry){
+      var cat = CATS[entry.c];
+      var item = document.createElement("div");
+      item.className = "changelog-item";
+      if(cat) item.style.setProperty("--h", cat.hue);
+      var typeLabel = CHANGELOG_TYPE_LABEL[entry.type] || entry.type;
+      var diffHtml;
+      if(entry.type === "correction" && entry.before){
+        diffHtml = '<p class="changelog-diff"><span class="before">'+escapeHtml(entry.before)+'</span><span class="after">'+escapeHtml(entry.after)+'</span></p>';
+      } else if(entry.type === "deletion"){
+        diffHtml = '<p class="changelog-diff"><span class="before">'+escapeHtml(entry.before)+'</span></p>';
+      } else {
+        diffHtml = '<p class="changelog-diff"><span class="after">'+escapeHtml(entry.after)+'</span></p>';
+      }
+      item.innerHTML =
+        '<div class="changelog-top">' +
+          '<div class="changelog-top-left">' +
+            '<span class="changelog-date">'+escapeHtml(entry.date)+'</span>' +
+            '<span class="changelog-type '+escapeHtml(entry.type || "")+'">'+escapeHtml(typeLabel)+'</span>' +
+            (cat ? '<span class="tag">'+escapeHtml(cat.label)+'</span>' : '') +
+          '</div>' +
+        '</div>' +
+        '<p class="changelog-term">'+escapeHtml(entry.term)+'</p>' +
+        diffHtml +
+        (entry.reason ? '<p class="changelog-reason">'+escapeHtml(entry.reason)+'</p>' : '');
+      changelogListEl.appendChild(item);
+    });
+  }
 
   /* ---------- marks (watchlist) ---------- */
   // Marks are keyed by stable term id. Older saved marks (from before terms had
@@ -1312,38 +1432,55 @@
       totalCountEl.textContent = GLOSSARY.length;
       renderGlossary();
       if(!TABS.marked.panel.hidden) renderMarked();
+      if(!TABS.manage.panel.hidden) renderManage();
     }
   });
 
-  /* ---------- shared card builder ---------- */
+  /* ---------- shared card builder ----------
+     mode "browse" (default; used by the glossary/watchlist tabs) shows a
+     mark (☆/★) toggle. mode "manage" (used by the manage tab) shows
+     edit/delete actions instead -- term add/edit/delete is consolidated
+     into the manage tab, so browse-mode cards carry neither. */
   function createCard(g, opts){
     opts = opts || {};
+    var mode = opts.mode || "browse";
     var cat = CATS[g.c];
-    var marked = markedSet.has(g.id);
     var card = document.createElement("div");
     card.className = "card";
     card.style.setProperty("--h", cat.hue);
+
+    var topRightHtml = "";
+    if(mode === "browse"){
+      var marked = markedSet.has(g.id);
+      topRightHtml = '<button type="button" class="mark-btn" data-id="'+g.id+'" aria-pressed="'+marked+'" aria-label="'+g.t+'をマークする">'+(marked ? '★' : '☆')+'</button>';
+    }
+    var actionsHtml = mode === "manage"
+      ? '<div class="card-actions">' +
+          '<button type="button" class="btn-link edit-btn">編集</button>' +
+          '<span class="sep">/</span>' +
+          '<button type="button" class="btn-link delete-btn">削除</button>' +
+        '</div>'
+      : "";
+
     card.innerHTML =
       '<div class="card-top">' +
         '<span class="tag">'+cat.label+'</span>' +
-        '<button type="button" class="mark-btn" data-id="'+g.id+'" aria-pressed="'+marked+'" aria-label="'+g.t+'をマークする">'+(marked ? '★' : '☆')+'</button>' +
+        topRightHtml +
       '</div>' +
       '<div><p class="term">'+g.t+'</p><span class="kana">'+g.k+'</span></div>' +
       '<button type="button" class="def-toggle" aria-expanded="false">定義を見る ▾</button>' +
       '<p class="def" hidden>'+g.d+'</p>' +
-      '<div class="card-actions">' +
-        '<button type="button" class="btn-link edit-btn">編集</button>' +
-        '<span class="sep">/</span>' +
-        '<button type="button" class="btn-link delete-btn">削除</button>' +
-      '</div>';
+      actionsHtml;
 
-    var markBtn = card.querySelector(".mark-btn");
-    markBtn.addEventListener("click", function(){
-      var nowMarked = toggleMarkState(g.id);
-      markBtn.setAttribute("aria-pressed", nowMarked);
-      markBtn.textContent = nowMarked ? "★" : "☆";
-      if(opts.onMarkChange) opts.onMarkChange(nowMarked, card);
-    });
+    if(mode === "browse"){
+      var markBtn = card.querySelector(".mark-btn");
+      markBtn.addEventListener("click", function(){
+        var nowMarked = toggleMarkState(g.id);
+        markBtn.setAttribute("aria-pressed", nowMarked);
+        markBtn.textContent = nowMarked ? "★" : "☆";
+        if(opts.onMarkChange) opts.onMarkChange(nowMarked, card);
+      });
+    }
 
     var toggleBtn = card.querySelector(".def-toggle");
     var defEl = card.querySelector(".def");
@@ -1354,15 +1491,17 @@
       toggleBtn.textContent = expanded ? "定義を見る ▾" : "定義を隠す ▴";
     });
 
-    card.querySelector(".edit-btn").addEventListener("click", function(){
-      openTermModal(g);
-    });
-    card.querySelector(".delete-btn").addEventListener("click", async function(){
-      var ok = await showConfirm('「'+g.t+'」を削除しますか？', "削除する");
-      if(!ok) return;
-      deleteTermById(g.id);
-      refreshAfterCrud();
-    });
+    if(mode === "manage"){
+      card.querySelector(".edit-btn").addEventListener("click", function(){
+        openTermModal(g);
+      });
+      card.querySelector(".delete-btn").addEventListener("click", async function(){
+        var ok = await showConfirm('「'+g.t+'」を削除しますか？', "削除する");
+        if(!ok) return;
+        deleteTermById(g.id);
+        refreshAfterCrud();
+      });
+    }
 
     return card;
   }
@@ -1466,6 +1605,45 @@
     updateMarkedTabCount();
     renderMarked();
     renderGlossary();
+  });
+
+  /* ---------- manage (add / edit / delete) panel ----------
+     Term add/edit/delete is consolidated here rather than on the
+     glossary/watchlist cards themselves; see the "manage" mode of
+     createCard() above. */
+  var activeManageCats = new Set(Object.keys(CATS));
+  var manageCatFilterEl = document.getElementById("manageCatFilter");
+  var manageSearchEl = document.getElementById("manageSearch");
+  var manageGridEl = document.getElementById("manageGrid");
+  var manageCountEl = document.getElementById("manageCount");
+  var manageEmptyEl = document.getElementById("manageEmpty");
+
+  function renderManage(){
+    var q = manageSearchEl.value.trim().toLowerCase();
+    var items = GLOSSARY.filter(function(g){
+      if(!activeManageCats.has(g.c)) return false;
+      if(!q) return true;
+      return g.t.toLowerCase().indexOf(q) > -1 || g.k.toLowerCase().indexOf(q) > -1 || g.d.indexOf(q) > -1;
+    });
+    items = sortByCategory(items);
+    manageCountEl.textContent = items.length + " / " + GLOSSARY.length + " 語";
+    manageGridEl.innerHTML = "";
+    manageEmptyEl.hidden = items.length !== 0;
+    items.forEach(function(g){
+      manageGridEl.appendChild(createCard(g, {mode: "manage"}));
+    });
+  }
+  manageSearchEl.addEventListener("input", renderManage);
+  buildCatChips(manageCatFilterEl, activeManageCats, renderManage);
+  document.getElementById("manageSelectAllCats").addEventListener("click", function(){
+    Object.keys(CATS).forEach(function(key){ activeManageCats.add(key); });
+    manageCatFilterEl.querySelectorAll(".catchip").forEach(function(btn){ btn.setAttribute("aria-pressed", "true"); });
+    renderManage();
+  });
+  document.getElementById("manageDeselectAllCats").addEventListener("click", function(){
+    activeManageCats.clear();
+    manageCatFilterEl.querySelectorAll(".catchip").forEach(function(btn){ btn.setAttribute("aria-pressed", "false"); });
+    renderManage();
   });
 
   /* ---------- storage helper ---------- */
@@ -1617,7 +1795,11 @@
     // Δ（デルタ）付きの略語表記から、正規表現の文字種判定上Δ記号だけが
     // 除かれてしまい、Δ抜きでは意味をなさない断片になってしまう語
     // （例：「ΔEVEやΔNIIといった指標」から「EVE」「NII」だけが抽出される）
-    "EVE","NII"
+    "EVE","NII",
+    // 英字＋数字の略語（CET1）から、正規表現の文字種判定上数字だけが
+    // 除かれてしまい、数字抜きでは意味をなさない断片になってしまう語
+    // （例：「損失吸収力が最も高いCET1と」から「CET」だけが抽出される）
+    "CET"
   ]);
   // 漢字・カタカナ・アルファベット・数字の文字種をまたいで連結しないよう、
   // 文字種ごとに独立したパターンでまとめる（例：「2営業日後」を1語として
