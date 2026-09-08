@@ -538,6 +538,7 @@
         <li>SORとは | マネックス証券 — https://info.monex.co.jp/help/stock/japan-trading/sor.html</li>
         <li>ISDA Documentation | International Swaps and Derivatives Association — https://www.isda.org/</li>
         <li>Basel Framework | Bank for International Settlements — https://www.bis.org/basel_framework/</li>
+        <li>金融庁 — https://www.fsa.go.jp/</li>
         <li>実務で使える金融工学 — http://practicalfinancialengineer.info/</li>
       </ul>
     </div>
@@ -1033,7 +1034,8 @@
     fx:         { label:"為替取引（FX）", hue:125 },
     bond:       { label:"債券・マネーマーケット", hue:175 },
     quant:      { label:"クオンツ・プライシングモデル", hue:45  },
-    margin:     { label:"担保・与信管理", hue:5   }
+    margin:     { label:"担保・与信管理", hue:5   },
+    alm:        { label:"ALM・銀行勘定金利リスク", hue:30  }
   };
 
   fetch("terms.json")
@@ -1595,13 +1597,20 @@
     "一時的","中心的","中核的","効率的","国際的","基本的","実質的","数値的",
     "標準的","段階的","相対的","統一的","統計的","自動的","解析的","逐次的",
     "電子的","平均的","時間的","強制的","確率的","連続的",
+    "長期的","重点的","安定的","代表的","追加的","一体的",
     // 位置・時点の接尾辞が付いただけの語（学習者は接尾辞なしで答えてしまう）
     "満期時","発行時","発注時","売買時","超過時","期間内","条件下","時間外",
     "帳簿上","規制上","公表前","通貨間","各時点","段階分",
     // 「〜等」（「等」を付けるかどうかは恣意的で、正解を特定できない）
-    "原則等","市場等","株式等","記号等",
+    "原則等","市場等","株式等","記号等","状況等",
     // 回数・期間を表すだけの語
-    "多数回","複数回","短時間","短期間","秒単位"
+    "多数回","複数回","短時間","短期間","秒単位",
+    // 「〜額」の一般語（どの変動・授受にも当てはまり、答えを一意に特定できない）
+    "変動額",
+    // Δ（デルタ）付きの略語表記から、正規表現の文字種判定上Δ記号だけが
+    // 除かれてしまい、Δ抜きでは意味をなさない断片になってしまう語
+    // （例：「ΔEVEやΔNIIといった指標」から「EVE」「NII」だけが抽出される）
+    "EVE","NII"
   ]);
   // 漢字・カタカナ・アルファベット・数字の文字種をまたいで連結しないよう、
   // 文字種ごとに独立したパターンでまとめる（例：「2営業日後」を1語として
@@ -1632,7 +1641,7 @@
   // 誤った組み合わせは BLANK_BROKEN_WORDS で明示的に除外する。
   // 「年以内」のように、直前の数字（穴埋め候補としては別途除外済み）が
   // ないと意味をなさない語も、同様に BLANK_BROKEN_WORDS で除外する。
-  var BLANK_BROKEN_WORDS = new Set(["将来生","随時付","一時止","追加差","段階上","年以内"]);
+  var BLANK_BROKEN_WORDS = new Set(["将来生","随時付","一時止","追加差","段階上","年以内","規律付"]);
 
   function isFollowedByHiragana(def, run){
     var idx = -1;
