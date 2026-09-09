@@ -25,7 +25,7 @@ jobs:
       - name: Prepare site directory
         run: |
           mkdir -p _site
-          cp index.html terms.json manifest.json icon.png _site/
+          cp index.html terms.json changelog.json manifest.json icon.png sw.js _site/
       - uses: actions/configure-pages@v5
         with:
           enablement: true
