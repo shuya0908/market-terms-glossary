@@ -384,7 +384,7 @@
   .progress{height:4px;background:var(--surface-alt);border-radius:2px;overflow:hidden;margin-bottom:26px;}
   .progress-fill{height:100%;background:var(--accent);transition:width .25s ease;}
   .q-card{margin-bottom:20px;}
-  .q-eyebrow{display:flex;gap:8px;align-items:center;margin-bottom:12px;}
+  .q-eyebrow{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:12px;}
   .q-prompt{font-size:1.08rem;line-height:1.75;margin:0;font-family:var(--font-body);}
   .q-prompt.is-term{font-family:var(--font-display);font-weight:700;font-size:1.4rem;}
   .options{display:grid;gap:10px;}
@@ -970,6 +970,7 @@
       <div class="q-card">
         <div class="q-eyebrow">
           <span class="tag" id="qTag" style="--h:40"></span>
+          <button type="button" class="mark-btn" id="qMarkBtn" aria-pressed="false" aria-label="この用語をマークする">☆</button>
         </div>
         <p class="q-prompt" id="qPrompt"></p>
         <p class="q-def-blank" id="qDefBlank" hidden></p>
@@ -1242,6 +1243,15 @@
     safeSet("mtq_marked", Array.from(markedSet));
     updateMarkedTabCount();
     return nowMarked;
+  }
+  // One-directional mark (never unmarks) used to auto-mark terms the user
+  // answered incorrectly in the quiz. Returns false if already marked.
+  function markTerm(id){
+    if(markedSet.has(id)) return false;
+    markedSet.add(id);
+    safeSet("mtq_marked", Array.from(markedSet));
+    updateMarkedTabCount();
+    return true;
   }
   function updateMarkedTabCount(){
     markedTabCountEl.textContent = markedSet.size > 0 ? " (" + markedSet.size + ")" : "";
@@ -1546,6 +1556,7 @@
     "原則等","市場等","株式等","記号等","状況等",
     "取引等","場合等","手法等","配当等","需給等","算定等","社債等","問題等",
     "株価等","悪化等","返済等","変化等","国債等","決済等","抑制等",
+    "数量等","銀行等",
     // 回数・期間を表すだけの語
     "多数回","複数回","短時間","短期間","秒単位",
     // 「〜額」の一般語（どの変動・授受にも当てはまり、答えを一意に特定できない）
@@ -1588,7 +1599,7 @@
   // 誤った組み合わせは BLANK_BROKEN_WORDS で明示的に除外する。
   // 「年以内」のように、直前の数字（穴埋め候補としては別途除外済み）が
   // ないと意味をなさない語も、同様に BLANK_BROKEN_WORDS で除外する。
-  var BLANK_BROKEN_WORDS = new Set(["将来生","随時付","一時止","追加差","段階上","年以内","規律付"]);
+  var BLANK_BROKEN_WORDS = new Set(["将来生","随時付","一時止","追加差","段階上","年以内","規律付","資金繰"]);
 
   function isFollowedByHiragana(def, run){
     var idx = -1;
@@ -1819,6 +1830,12 @@
     var tagEl = document.getElementById("qTag");
     tagEl.textContent = CATS[q.term.c].label;
     tagEl.style.setProperty("--h", CATS[q.term.c].hue);
+    var markBtn = document.getElementById("qMarkBtn");
+    markBtn.setAttribute("data-id", q.term.id);
+    markBtn.setAttribute("aria-label", q.term.t + "をマークする");
+    var isMarked = markedSet.has(q.term.id);
+    markBtn.setAttribute("aria-pressed", isMarked);
+    markBtn.textContent = isMarked ? "★" : "☆";
     var promptEl = document.getElementById("qPrompt");
     var defBlankEl = document.getElementById("qDefBlank");
     var optsEl = document.getElementById("qOptions");
@@ -1875,7 +1892,9 @@
     var feedbackEl = document.getElementById("qBlankFeedback");
     var isCorrect = normalizeAnswer(inputEl.value) !== "" && normalizeAnswer(inputEl.value) === normalizeAnswer(q.blankWord);
     if(isCorrect) quiz.correct++;
+    else markTerm(q.term.id);
     quiz.results.push({term:q.term, correct:isCorrect, type:q.type});
+    syncMarkButtonsUI();
     inputEl.disabled = true;
     submitBtn.disabled = true;
     inputEl.classList.add(isCorrect ? "correct" : "wrong");
@@ -1884,6 +1903,13 @@
     feedbackEl.textContent = isCorrect ? "正解です。" : "不正解。正解は「" + q.blankWord + "」です。";
     document.getElementById("nextBtn").disabled = false;
   }
+
+  document.getElementById("qMarkBtn").addEventListener("click", function(){
+    var id = this.getAttribute("data-id");
+    var nowMarked = toggleMarkState(id);
+    this.setAttribute("aria-pressed", nowMarked);
+    this.textContent = nowMarked ? "★" : "☆";
+  });
 
   document.getElementById("qBlankSubmit").addEventListener("click", onBlankAnswer);
   document.getElementById("qBlankInput").addEventListener("keydown", function(e){
@@ -1899,7 +1925,9 @@
     var q = quiz.questions[quiz.index];
     var isCorrect = optTerm.id === q.correctTerm.id;
     if(isCorrect) quiz.correct++;
+    else markTerm(q.term.id);
     quiz.results.push({term:q.term, correct:isCorrect, type:q.type});
+    syncMarkButtonsUI();
     Array.prototype.forEach.call(document.querySelectorAll("#qOptions .opt"), function(b){
       b.disabled = true;
       b.querySelector(".opt-explain").hidden = false;
