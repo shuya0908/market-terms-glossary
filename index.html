@@ -275,7 +275,6 @@
     display:flex;flex-direction:column;gap:8px;
   }
   .card-top{display:flex;justify-content:space-between;align-items:center;gap:10px;}
-  .card-actions{display:flex;align-items:center;gap:8px;}
   .term{font-family:var(--font-display);font-weight:700;font-size:1.05rem;margin:0;}
   .kana{font-family:var(--font-mono);font-size:.72rem;color:var(--ink-muted);display:block;margin-top:2px;}
   .tag{
@@ -481,22 +480,6 @@
     overflow-y:auto;
     box-shadow:var(--shadow);
   }
-  .modal h2{font-family:var(--font-display);font-size:1.1rem;margin:0 0 18px;}
-  .modal-field{margin-bottom:16px;}
-  .modal-field label{display:block;font-size:.78rem;font-weight:700;color:var(--ink-muted);margin-bottom:6px;font-family:var(--font-display);}
-  .modal-field input,.modal-field select,.modal-field textarea{
-    width:100%;
-    font-family:var(--font-body);
-    font-size:.9rem;
-    background:var(--surface-alt);
-    border:1px solid var(--border);
-    border-radius:4px;
-    padding:9px 11px;
-    color:var(--ink);
-    box-sizing:border-box;
-  }
-  .modal-field textarea{resize:vertical;}
-  .modal-warn{color:var(--danger);font-size:.82rem;min-height:1.2em;margin:0 0 10px;}
   .modal-actions{display:flex;justify-content:space-between;align-items:center;margin-top:4px;gap:10px;flex-wrap:wrap;}
   .modal-actions-right{display:flex;gap:10px;margin-left:auto;}
   .modal-confirm{max-width:380px;}
@@ -531,9 +514,6 @@
     </button>
     <button class="tab" id="tabQuizBtn" role="tab" aria-selected="false" aria-controls="panelQuiz">
       <span class="jp">問題演習</span><span class="en">QUIZ</span>
-    </button>
-    <button class="tab" id="tabManageBtn" role="tab" aria-selected="false" aria-controls="panelManage">
-      <span class="jp">管理</span><span class="en">MANAGE</span>
     </button>
     <button class="tab" id="tabChangelogBtn" role="tab" aria-selected="false" aria-controls="panelChangelog">
       <span class="jp">修正履歴</span><span class="en">CHANGELOG</span>
@@ -577,7 +557,7 @@
   <div class="panel" id="panelDiagrams" role="tabpanel" aria-labelledby="tabDiagramsBtn" hidden>
 
     <div class="diagrams">
-      <p class="lead">用語だけでは像を結びにくい仕組みを図解します。板の読み方、注文が決済に至るまでの流れ、オプションの損益、証拠金と値洗い、イールドカーブ、レポ取引の資金・証券フローを扱います。</p>
+      <p class="lead">用語だけでは像を結びにくい仕組みを図解します。板の読み方、注文が決済に至るまでの流れ、オプションの損益、証拠金と値洗い、イールドカーブ、レポ取引の資金・証券フロー、VaRと期待ショートフォールの関係を扱います。</p>
 
       <div class="diagram-card">
         <h3>板（気配）の読み方</h3>
@@ -906,6 +886,36 @@
           <figcaption>現先取引（レポ取引）では、開始日に証券保有者が担保証券を差し入れて現金を調達し、満了日にレポ金利を上乗せした現金を返済して担保証券を受け戻す。担保となる証券の種類を特定するかどうかでGCレポ・SCレポに分かれる。</figcaption>
         </figure>
       </div>
+
+      <div class="diagram-card">
+        <h3>VaRと期待ショートフォール（ES）の関係</h3>
+        <figure>
+          <svg viewBox="0 0 640 300" role="img" aria-label="損益の分布を釣鐘型の曲線で示す図。信頼水準95%に対応するVaRの位置を境に、それを超える左側の裾（発生確率5%）を損失域として塗りつぶし、その裾部分の平均値を期待ショートフォールとして示している。">
+              <line x1="40" y1="220" x2="620" y2="220" stroke="var(--ink-muted)" stroke-width="1"/>
+              <line x1="40" y1="220" x2="40" y2="40" stroke="var(--ink-muted)" stroke-width="1"/>
+              <text x="15" y="40" text-anchor="middle" class="dg-text" font-size="10" fill="var(--ink-muted)" transform="rotate(-90 15 40)">発生確率</text>
+
+              <polygon points="50.0,219.6 70.0,219.1 90.0,218.1 110.0,216.1 130.0,212.5 150.0,206.5 170.0,197.0 190.0,183.2 198.4,176.1 198.4,220 50.0,220" fill="var(--danger-soft)"/>
+
+              <polyline points="50.0,219.6 70.0,219.1 90.0,218.1 110.0,216.1 130.0,212.5 150.0,206.5 170.0,197.0 190.0,183.2 210.0,164.8 230.0,142.2 250.0,116.9 270.0,91.7 290.0,70.0 310.0,55.2 330.0,50.0 350.0,55.2 370.0,70.0 390.0,91.7 410.0,116.9 430.0,142.2 450.0,164.8 470.0,183.2 490.0,197.0 510.0,206.5 530.0,212.5 550.0,216.1 570.0,218.1 590.0,219.1 610.0,219.6" fill="none" stroke="var(--accent)" stroke-width="2.2"/>
+
+              <line x1="198.4" y1="220" x2="198.4" y2="40" stroke="var(--danger)" stroke-width="1.3" stroke-dasharray="4,3"/>
+              <text x="198.4" y="30" text-anchor="middle" class="dg-text" font-size="10.5" font-weight="700" fill="var(--danger-ink)">VaR（信頼水準95%）</text>
+
+              <line x1="165.0" y1="220" x2="165.0" y2="199.7" stroke="var(--ink)" stroke-width="1.3" stroke-dasharray="2,3"/>
+              <circle cx="165.0" cy="199.7" r="4.5" fill="var(--ink)"/>
+              <text x="90" y="245" class="dg-text" font-size="10.5" font-weight="700" fill="var(--ink)">ES（裾の平均損失）</text>
+              <line x1="130" y1="240" x2="163" y2="215" stroke="var(--ink)" stroke-width="1"/>
+
+              <text x="90" y="270" class="dg-text" font-size="9.5" fill="var(--danger-ink)">損失がVaRを超える確率（例：5%）</text>
+
+              <text x="40" y="238" class="dg-text" font-size="10.5" fill="var(--ink-muted)">← 大きな損失</text>
+              <text x="620" y="238" text-anchor="end" class="dg-text" font-size="10.5" fill="var(--ink-muted)">利益 →</text>
+              <text x="330" y="255" text-anchor="middle" class="dg-text" font-size="11" font-weight="700" fill="var(--ink-muted)">損益（PL）</text>
+          </svg>
+          <figcaption>損益（PL）の分布を釣鐘型の曲線で表すと、信頼水準95%に対応する損失の水準がVaRであり、それを上回る損失が生じる確率は5%となる。期待ショートフォール（ES）は、その5%の裾（テール）に入った場合の平均的な損失額を示す指標で、VaRだけでは捉えきれない裾の厳しさを補完する。なお実際の市場変動は正規分布より裾が厚い（ファットテール）ことが多く、VaR・ESとも前提とする分布の形状に計算結果が依存する点に留意が必要。</figcaption>
+        </figure>
+      </div>
     </div>
   </div>
   <div class="panel" id="panelMarked" role="tabpanel" aria-labelledby="tabMarkedBtn" hidden>
@@ -992,25 +1002,6 @@
 
   </div>
 
-  <div class="panel" id="panelManage" role="tabpanel" aria-labelledby="tabManageBtn" hidden>
-
-    <div class="controls">
-      <div class="search-row">
-        <input type="search" id="manageSearch" placeholder="用語・定義をキーワード検索…" aria-label="用語検索（管理）">
-        <button type="button" class="btn ghost small" id="manageAddTermBtn">＋ 用語を追加</button>
-        <span class="count" id="manageCount"></span>
-      </div>
-      <div class="cat-actions">
-        <button type="button" class="btn-link" id="manageSelectAllCats">すべて選択</button>
-        <span class="sep">/</span>
-        <button type="button" class="btn-link" id="manageDeselectAllCats">すべて解除</button>
-      </div>
-      <div class="chiprow" id="manageCatFilter" role="group" aria-label="カテゴリで絞り込み"></div>
-    </div>
-    <div class="grid" id="manageGrid"></div>
-    <div class="empty" id="manageEmpty" hidden>該当する用語が見つかりませんでした。</div>
-  </div>
-
   <div class="panel" id="panelChangelog" role="tabpanel" aria-labelledby="tabChangelogBtn" hidden>
     <p class="lead">用語集（<code>terms.json</code>）に加えた既存用語の修正・関連用語の追加を、日付つきで記録しています。用語集本体には現在の内容のみが載るため、何をいつ・なぜ直したかはここで追えます。</p>
     <div class="changelog-list" id="changelogList"></div>
@@ -1018,7 +1009,7 @@
   </div>
 
   <div class="backup-bar">
-    <p class="backup-note">マーク・クイズ成績・追加した用語は、このブラウザにのみ保存されます。ブラウザの設定などにより保存内容が消えることがあるため、定期的にバックアップの保存をおすすめします。</p>
+    <p class="backup-note">マーク・クイズ成績は、このブラウザにのみ保存されます。ブラウザの設定などにより保存内容が消えることがあるため、定期的にバックアップの保存をおすすめします。</p>
     <div class="backup-actions">
       <button type="button" class="btn ghost small" id="backupSaveBtn">バックアップを保存</button>
       <button type="button" class="btn ghost small" id="backupLoadBtn">バックアップから復元</button>
@@ -1027,36 +1018,6 @@
   </div>
 
   <footer>市場系システムエンジニア向け学習ツール ・ 全 <span id="totalCount"></span> 語収録</footer>
-</div>
-
-<div class="modal-overlay" id="termModalOverlay" hidden>
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="termModalTitle">
-    <h2 id="termModalTitle">用語を追加</h2>
-    <div class="modal-field">
-      <label for="tmTerm">用語</label>
-      <input type="text" id="tmTerm" placeholder="例：呼値">
-    </div>
-    <div class="modal-field">
-      <label for="tmKana">ふりがな</label>
-      <input type="text" id="tmKana" placeholder="例：よびね">
-    </div>
-    <div class="modal-field">
-      <label for="tmCat">カテゴリ</label>
-      <select id="tmCat"></select>
-    </div>
-    <div class="modal-field">
-      <label for="tmDef">定義</label>
-      <textarea id="tmDef" rows="4" placeholder="この用語の説明を入力してください"></textarea>
-    </div>
-    <p class="modal-warn" id="tmWarn"></p>
-    <div class="modal-actions">
-      <button type="button" class="btn ghost" id="tmDeleteBtn" hidden>削除</button>
-      <div class="modal-actions-right">
-        <button type="button" class="btn ghost" id="tmCancelBtn">キャンセル</button>
-        <button type="button" class="btn" id="tmSaveBtn">保存</button>
-      </div>
-    </div>
-  </div>
 </div>
 
 <div class="modal-overlay" id="confirmOverlay" hidden>
@@ -1115,97 +1076,8 @@
   function init(BUILTIN_GLOSSARY){
   BUILTIN_GLOSSARY.forEach(function(g, i){ g.id = "b" + i; });
 
-  /* ---------- glossary data: built-in + user-added, minus edits/deletions ---------- */
-  function generateTermId(){
-    return "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-  }
-  var GLOSSARY = [];
-  function rebuildGlossary(){
-    var customTerms = safeGet("mtq_custom") || [];
-    var editsMap = safeGet("mtq_edits") || {};
-    var deletedIds = new Set(safeGet("mtq_deleted") || []);
-    var merged = BUILTIN_GLOSSARY.concat(customTerms)
-      .filter(function(g){ return !deletedIds.has(g.id); })
-      .map(function(g){
-        var e = editsMap[g.id];
-        return e ? Object.assign({}, g, e, {id: g.id, c: e.c || g.c}) : g;
-      });
-    GLOSSARY.length = 0;
-    Array.prototype.push.apply(GLOSSARY, merged);
-  }
-  rebuildGlossary();
-
-  function addOrUpdateTerm(data, existingId){
-    if(existingId && existingId.charAt(0) === "b"){
-      var editsMap = safeGet("mtq_edits") || {};
-      editsMap[existingId] = { t:data.t, k:data.k, c:data.c, d:data.d };
-      safeSet("mtq_edits", editsMap);
-    } else if(existingId){
-      var customTerms = safeGet("mtq_custom") || [];
-      var idx = customTerms.findIndex(function(x){ return x.id === existingId; });
-      if(idx > -1){ customTerms[idx] = Object.assign({}, customTerms[idx], data, {id: existingId}); }
-      safeSet("mtq_custom", customTerms);
-    } else {
-      var customTerms2 = safeGet("mtq_custom") || [];
-      customTerms2.push(Object.assign({}, data, {id: generateTermId()}));
-      safeSet("mtq_custom", customTerms2);
-    }
-    rebuildGlossary();
-  }
-
-  function deleteTermById(id){
-    if(id.charAt(0) === "c"){
-      var customTerms = (safeGet("mtq_custom") || []).filter(function(x){ return x.id !== id; });
-      safeSet("mtq_custom", customTerms);
-    } else {
-      var deletedIds = safeGet("mtq_deleted") || [];
-      if(deletedIds.indexOf(id) === -1){ deletedIds.push(id); safeSet("mtq_deleted", deletedIds); }
-    }
-    var editsMap = safeGet("mtq_edits") || {};
-    if(editsMap[id]){ delete editsMap[id]; safeSet("mtq_edits", editsMap); }
-    if(markedSet.has(id)){
-      markedSet.delete(id);
-      safeSet("mtq_marked", Array.from(markedSet));
-      updateMarkedTabCount();
-    }
-    rebuildGlossary();
-  }
-
-  function refreshAfterCrud(){
-    totalCountEl.textContent = GLOSSARY.length;
-    renderGlossary();
-    if(!TABS.marked.panel.hidden) renderMarked();
-    if(!TABS.manage.panel.hidden) renderManage();
-    updateMarkedTabCount();
-  }
-
-  /* ---------- add / edit / delete term modal ---------- */
-  var termModalOverlay = document.getElementById("termModalOverlay");
-  var tmCatSelect = document.getElementById("tmCat");
-  Object.keys(CATS).forEach(function(key){
-    var opt = document.createElement("option");
-    opt.value = key;
-    opt.textContent = CATS[key].label;
-    tmCatSelect.appendChild(opt);
-  });
-
-  var editingTermId = null;
-  function openTermModal(term){
-    editingTermId = term ? term.id : null;
-    document.getElementById("termModalTitle").textContent = term ? "用語を編集" : "用語を追加";
-    document.getElementById("tmTerm").value = term ? term.t : "";
-    document.getElementById("tmKana").value = term ? term.k : "";
-    tmCatSelect.value = term ? term.c : Object.keys(CATS)[0];
-    document.getElementById("tmDef").value = term ? term.d : "";
-    document.getElementById("tmWarn").textContent = "";
-    document.getElementById("tmDeleteBtn").hidden = !term;
-    termModalOverlay.hidden = false;
-    document.getElementById("tmTerm").focus();
-  }
-  function closeTermModal(){
-    termModalOverlay.hidden = true;
-    editingTermId = null;
-  }
+  /* ---------- glossary data ---------- */
+  var GLOSSARY = BUILTIN_GLOSSARY;
 
   /* ---------- in-page confirm / alert dialogs ----------
      This page runs inside a hosted iframe where the browser's native
@@ -1253,34 +1125,6 @@
     });
   }
 
-  document.getElementById("manageAddTermBtn").addEventListener("click", function(){ openTermModal(null); });
-  document.getElementById("tmCancelBtn").addEventListener("click", closeTermModal);
-  termModalOverlay.addEventListener("click", function(e){
-    if(e.target === termModalOverlay) closeTermModal();
-  });
-  document.getElementById("tmSaveBtn").addEventListener("click", function(){
-    var t = document.getElementById("tmTerm").value.trim();
-    var k = document.getElementById("tmKana").value.trim();
-    var c = tmCatSelect.value;
-    var d = document.getElementById("tmDef").value.trim();
-    if(!t || !d){
-      document.getElementById("tmWarn").textContent = "用語と定義は必須です。";
-      return;
-    }
-    addOrUpdateTerm({t:t, k:k, c:c, d:d}, editingTermId);
-    closeTermModal();
-    refreshAfterCrud();
-  });
-  document.getElementById("tmDeleteBtn").addEventListener("click", async function(){
-    if(!editingTermId) return;
-    var idToDelete = editingTermId;
-    var ok = await showConfirm("この用語を削除しますか？", "削除する");
-    if(!ok) return;
-    deleteTermById(idToDelete);
-    closeTermModal();
-    refreshAfterCrud();
-  });
-
   var totalCountEl = document.getElementById("totalCount");
   totalCountEl.textContent = GLOSSARY.length;
 
@@ -1299,7 +1143,6 @@
     diagrams:   { btn: document.getElementById("tabDiagramsBtn"),   panel: document.getElementById("panelDiagrams")   },
     marked:     { btn: document.getElementById("tabMarkedBtn"),     panel: document.getElementById("panelMarked")     },
     quiz:       { btn: document.getElementById("tabQuizBtn"),       panel: document.getElementById("panelQuiz")       },
-    manage:     { btn: document.getElementById("tabManageBtn"),     panel: document.getElementById("panelManage")     },
     changelog:  { btn: document.getElementById("tabChangelogBtn"),  panel: document.getElementById("panelChangelog")  }
   };
   function showTab(name){
@@ -1310,14 +1153,12 @@
     });
     if(name === "marked") renderMarked();
     if(name === "glossary") renderGlossary();
-    if(name === "manage") renderManage();
     if(name === "changelog") renderChangelog();
   }
   TABS.glossary.btn.addEventListener("click", function(){ showTab("glossary"); });
   TABS.diagrams.btn.addEventListener("click", function(){ showTab("diagrams"); });
   TABS.marked.btn.addEventListener("click", function(){ showTab("marked"); });
   TABS.quiz.btn.addEventListener("click", function(){ showTab("quiz"); });
-  TABS.manage.btn.addEventListener("click", function(){ showTab("manage"); });
   TABS.changelog.btn.addEventListener("click", function(){ showTab("changelog"); });
 
   /* ---------- changelog (修正履歴) ---------- */
@@ -1427,60 +1268,36 @@
       updateMarkedTabCount();
       syncMarkButtonsUI();
       if(typeof renderMarked === "function") renderMarked();
-    } else if(e.key === "mtq_custom" || e.key === "mtq_edits" || e.key === "mtq_deleted"){
-      rebuildGlossary();
-      totalCountEl.textContent = GLOSSARY.length;
-      renderGlossary();
-      if(!TABS.marked.panel.hidden) renderMarked();
-      if(!TABS.manage.panel.hidden) renderManage();
     }
   });
 
-  /* ---------- shared card builder ----------
-     mode "browse" (default; used by the glossary/watchlist tabs) shows a
-     mark (☆/★) toggle. mode "manage" (used by the manage tab) shows
-     edit/delete actions instead -- term add/edit/delete is consolidated
-     into the manage tab, so browse-mode cards carry neither. */
+  /* ---------- shared card builder ---------- */
   function createCard(g, opts){
     opts = opts || {};
-    var mode = opts.mode || "browse";
     var cat = CATS[g.c];
     var card = document.createElement("div");
     card.className = "card";
     card.style.setProperty("--h", cat.hue);
 
-    var topRightHtml = "";
-    if(mode === "browse"){
-      var marked = markedSet.has(g.id);
-      topRightHtml = '<button type="button" class="mark-btn" data-id="'+g.id+'" aria-pressed="'+marked+'" aria-label="'+g.t+'をマークする">'+(marked ? '★' : '☆')+'</button>';
-    }
-    var actionsHtml = mode === "manage"
-      ? '<div class="card-actions">' +
-          '<button type="button" class="btn-link edit-btn">編集</button>' +
-          '<span class="sep">/</span>' +
-          '<button type="button" class="btn-link delete-btn">削除</button>' +
-        '</div>'
-      : "";
+    var marked = markedSet.has(g.id);
+    var markBtnHtml = '<button type="button" class="mark-btn" data-id="'+g.id+'" aria-pressed="'+marked+'" aria-label="'+g.t+'をマークする">'+(marked ? '★' : '☆')+'</button>';
 
     card.innerHTML =
       '<div class="card-top">' +
         '<span class="tag">'+cat.label+'</span>' +
-        topRightHtml +
+        markBtnHtml +
       '</div>' +
       '<div><p class="term">'+g.t+'</p><span class="kana">'+g.k+'</span></div>' +
       '<button type="button" class="def-toggle" aria-expanded="false">定義を見る ▾</button>' +
-      '<p class="def" hidden>'+g.d+'</p>' +
-      actionsHtml;
+      '<p class="def" hidden>'+g.d+'</p>';
 
-    if(mode === "browse"){
-      var markBtn = card.querySelector(".mark-btn");
-      markBtn.addEventListener("click", function(){
-        var nowMarked = toggleMarkState(g.id);
-        markBtn.setAttribute("aria-pressed", nowMarked);
-        markBtn.textContent = nowMarked ? "★" : "☆";
-        if(opts.onMarkChange) opts.onMarkChange(nowMarked, card);
-      });
-    }
+    var markBtn = card.querySelector(".mark-btn");
+    markBtn.addEventListener("click", function(){
+      var nowMarked = toggleMarkState(g.id);
+      markBtn.setAttribute("aria-pressed", nowMarked);
+      markBtn.textContent = nowMarked ? "★" : "☆";
+      if(opts.onMarkChange) opts.onMarkChange(nowMarked, card);
+    });
 
     var toggleBtn = card.querySelector(".def-toggle");
     var defEl = card.querySelector(".def");
@@ -1490,18 +1307,6 @@
       defEl.hidden = expanded;
       toggleBtn.textContent = expanded ? "定義を見る ▾" : "定義を隠す ▴";
     });
-
-    if(mode === "manage"){
-      card.querySelector(".edit-btn").addEventListener("click", function(){
-        openTermModal(g);
-      });
-      card.querySelector(".delete-btn").addEventListener("click", async function(){
-        var ok = await showConfirm('「'+g.t+'」を削除しますか？', "削除する");
-        if(!ok) return;
-        deleteTermById(g.id);
-        refreshAfterCrud();
-      });
-    }
 
     return card;
   }
@@ -1607,45 +1412,6 @@
     renderGlossary();
   });
 
-  /* ---------- manage (add / edit / delete) panel ----------
-     Term add/edit/delete is consolidated here rather than on the
-     glossary/watchlist cards themselves; see the "manage" mode of
-     createCard() above. */
-  var activeManageCats = new Set(Object.keys(CATS));
-  var manageCatFilterEl = document.getElementById("manageCatFilter");
-  var manageSearchEl = document.getElementById("manageSearch");
-  var manageGridEl = document.getElementById("manageGrid");
-  var manageCountEl = document.getElementById("manageCount");
-  var manageEmptyEl = document.getElementById("manageEmpty");
-
-  function renderManage(){
-    var q = manageSearchEl.value.trim().toLowerCase();
-    var items = GLOSSARY.filter(function(g){
-      if(!activeManageCats.has(g.c)) return false;
-      if(!q) return true;
-      return g.t.toLowerCase().indexOf(q) > -1 || g.k.toLowerCase().indexOf(q) > -1 || g.d.indexOf(q) > -1;
-    });
-    items = sortByCategory(items);
-    manageCountEl.textContent = items.length + " / " + GLOSSARY.length + " 語";
-    manageGridEl.innerHTML = "";
-    manageEmptyEl.hidden = items.length !== 0;
-    items.forEach(function(g){
-      manageGridEl.appendChild(createCard(g, {mode: "manage"}));
-    });
-  }
-  manageSearchEl.addEventListener("input", renderManage);
-  buildCatChips(manageCatFilterEl, activeManageCats, renderManage);
-  document.getElementById("manageSelectAllCats").addEventListener("click", function(){
-    Object.keys(CATS).forEach(function(key){ activeManageCats.add(key); });
-    manageCatFilterEl.querySelectorAll(".catchip").forEach(function(btn){ btn.setAttribute("aria-pressed", "true"); });
-    renderManage();
-  });
-  document.getElementById("manageDeselectAllCats").addEventListener("click", function(){
-    activeManageCats.clear();
-    manageCatFilterEl.querySelectorAll(".catchip").forEach(function(btn){ btn.setAttribute("aria-pressed", "false"); });
-    renderManage();
-  });
-
   /* ---------- storage helper ---------- */
   function safeGet(key){
     try{ var v = localStorage.getItem(key); return v ? JSON.parse(v) : null; }catch(e){ return null; }
@@ -1655,11 +1421,11 @@
   }
 
   /* ---------- backup / restore ----------
-     Marks, quiz stats and custom terms all live in this browser's
-     localStorage only. Some browsers/extensions periodically clear
-     site data, so this lets a viewer save a JSON snapshot and load it
-     back later (even in a different browser session on the same
-     device), independent of whatever cleared localStorage. */
+     Marks and quiz stats live in this browser's localStorage only.
+     Some browsers/extensions periodically clear site data, so this lets
+     a viewer save a JSON snapshot and load it back later (even in a
+     different browser session on the same device), independent of
+     whatever cleared localStorage. */
   function pad2(n){ return n < 10 ? "0" + n : String(n); }
 
   document.getElementById("backupSaveBtn").addEventListener("click", async function(){
@@ -1667,10 +1433,7 @@
       version: 1,
       exportedAt: new Date().toISOString(),
       mtq_marked: safeGet("mtq_marked") || [],
-      mtq_stats: safeGet("mtq_stats") || {attempts:0, correct:0},
-      mtq_custom: safeGet("mtq_custom") || [],
-      mtq_edits: safeGet("mtq_edits") || {},
-      mtq_deleted: safeGet("mtq_deleted") || []
+      mtq_stats: safeGet("mtq_stats") || {attempts:0, correct:0}
     };
     var json = JSON.stringify(payload, null, 2);
     var dl = null;
@@ -1711,17 +1474,12 @@
         await showAlert("ファイルの形式が正しくありません。");
         return;
       }
-      var ok = await showConfirm("現在のマーク・クイズ成績・追加した用語を、このバックアップファイルの内容で上書きします。よろしいですか？", "復元する");
+      var ok = await showConfirm("現在のマーク・クイズ成績を、このバックアップファイルの内容で上書きします。よろしいですか？", "復元する");
       if(!ok) return;
 
       safeSet("mtq_marked", Array.isArray(data.mtq_marked) ? data.mtq_marked : []);
       safeSet("mtq_stats", (data.mtq_stats && typeof data.mtq_stats === "object") ? data.mtq_stats : {attempts:0, correct:0});
-      safeSet("mtq_custom", Array.isArray(data.mtq_custom) ? data.mtq_custom : []);
-      safeSet("mtq_edits", (data.mtq_edits && typeof data.mtq_edits === "object") ? data.mtq_edits : {});
-      safeSet("mtq_deleted", Array.isArray(data.mtq_deleted) ? data.mtq_deleted : []);
 
-      rebuildGlossary();
-      totalCountEl.textContent = GLOSSARY.length;
       markedSet = new Set((safeGet("mtq_marked") || []).filter(function(v){ return ID_PATTERN.test(v); }));
       updateMarkedTabCount();
       syncMarkButtonsUI();
