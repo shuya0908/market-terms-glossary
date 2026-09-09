@@ -8,7 +8,16 @@
 
 https://shuya0908.github.io/market-terms-glossary/
 
-`main` ブランチに push すると、`.github/workflows/pages.yml` のGitHub Actionsワークフローが自動的にビルド・デプロイを行い、上記URLへ反映される。手動でのArtifact同期作業は不要（`index.html` / `terms.json` / `manifest.json` / `icon.png` はリポジトリのファイルがそのまま配信される）。
+`main` ブランチに push すると、`.github/workflows/pages.yml` のGitHub Actionsワークフローが自動的にビルド・デプロイを行い、上記URLへ反映される。手動でのArtifact同期作業は不要（`index.html` / `terms.json` / `changelog.json` / `manifest.json` / `icon.png` / `sw.js` はリポジトリのファイルがそのまま配信される）。新しいデータファイル・静的ファイルを追加した場合は、`.github/workflows/pages.yml` の `cp` コマンドにもそのファイルを追加しないと `_site/` にコピーされず、GitHub Pages上で404になる点に注意（例：`changelog.json` の追加時にこの追加を忘れ、修正履歴タブが常に空になっていた）。
+
+### ホーム画面に追加したアプリ（PWA）が更新されない問題への対応（重要）
+
+iOSなどでホーム画面に追加した状態（standalone表示）では、WebKitがページや `fetch()` の結果を非常に長くキャッシュし、GitHub Pages側は最新化されていてもホーム画面のアプリ側の表示だけが更新されないことがある。この対策として `sw.js`（Service Worker）を導入しており、`index.html` の末尾で登録している。
+
+- `sw.js` は network-first（常にネットワークを優先し、`cache: "no-store"` で取得した最新のレスポンスでキャッシュを上書きし、オフライン時のみキャッシュへフォールバックする）方針で実装している。オフライン対応のためのキャッシュ機構であって、オンライン時に古い内容を意図的に返す用途ではない。
+- `index.html` 側は `updatefound` イベントを監視し、新しいService Workerが有効化されたタイミングで1回だけ `location.reload()` する。
+- `sw.js` の `CORE_ASSETS` に新しい静的ファイル（例：新しいデータファイル）を追加した場合は、あわせて `.github/workflows/pages.yml` の `cp` コマンドにも追加すること。
+- `sw.js` の中身を変更した場合、ブラウザがService Workerスクリプト自体の更新を検知するまで最大24時間程度のタイムラグがありうる（仕様上の制約）。動作確認する場合は、ブラウザの開発者ツールでService Workerを一度解除してから再読み込みするか、`python3 -m http.server` 等でのローカル確認時にキャッシュを無効化して確認すること。
 
 ## 用語を追加する際のカテゴリ見直し（重要）
 

@@ -19,7 +19,7 @@ https://shuya0908.github.io/market-terms-glossary/
 - **クイズ機能**: カテゴリや出題数を指定してランダム出題されるクイズです。「定義→用語」「用語→定義」の4択に加えて、用語の説明文中の単語が空欄になり解答者がそれを記述して埋める「穴埋め（記述式）」形式も選べます。「ランダム混在」を選ぶとこの3形式が問題ごとにランダムに切り替わります。4択では解答後に正解・不正解にかかわらずすべての選択肢の解説を確認でき、穴埋め形式では正解の単語が表示されます。「中断する」ボタンでいつでも設定画面に戻れます（中断した回はクイズ成績には記録されません）。
 - **マーク（ウォッチリスト）機能**: 気になる用語をマークして後から一覧できます。同じブラウザの複数タブ間でもマーク状態がリアルタイムに同期します。
 - **バックアップの保存・復元**: マーク・クイズの成績をJSONファイルとして保存し、後から読み込んで復元できます。
-- **ホーム画面への追加（PWA）**: iPhoneのSafariなどから「ホーム画面に追加」すると、URLバーなしのアプリのような見た目で起動できます。マーク・クイズ成績はブラウザのlocalStorageに保存されるため、ホーム画面から開いた場合も保持されます（端末をまたいだ同期はされません。上記のバックアップ機能をご利用ください）。
+- **ホーム画面への追加（PWA）**: iPhoneのSafariなどから「ホーム画面に追加」すると、URLバーなしのアプリのような見た目で起動できます。マーク・クイズ成績はブラウザのlocalStorageに保存されるため、ホーム画面から開いた場合も保持されます（端末をまたいだ同期はされません。上記のバックアップ機能をご利用ください）。Service Worker（`sw.js`）により常に最新の内容をネットワークから取得するため、`main` ブランチの更新はホーム画面から開いたアプリ側にも反映されます（オフライン時のみ直近に取得したキャッシュを表示します）。
 
 ## 使い方
 
@@ -37,7 +37,7 @@ python3 -m http.server 8000
 
 ## 技術構成
 
-HTML / CSS / JavaScript のみで構成されたWebアプリケーションで、ビルド環境は不要です。用語データは `terms.json` に分離しており、`index.html` が起動時に `fetch` で読み込みます。外部ライブラリへの依存はGoogle Fonts（Zen Kaku Gothic New, Noto Sans JP, IBM Plex Mono）のみです。`manifest.json` と `icon.png` により、iPhone等での「ホーム画面に追加」に対応しています。GitHub Pagesへの公開は `.github/workflows/pages.yml` のGitHub Actionsワークフローが行います。
+HTML / CSS / JavaScript のみで構成されたWebアプリケーションで、ビルド環境は不要です。用語データは `terms.json` に分離しており、`index.html` が起動時に `fetch` で読み込みます。外部ライブラリへの依存はGoogle Fonts（Zen Kaku Gothic New, Noto Sans JP, IBM Plex Mono）のみです。`manifest.json` と `icon.png` により、iPhone等での「ホーム画面に追加」に対応しています。`sw.js`（Service Worker、network-first）により、ホーム画面に追加したアプリでもキャッシュにより表示が古いまま更新されない事態を防いでいます。GitHub Pagesへの公開は `.github/workflows/pages.yml` のGitHub Actionsワークフローが行います。
 
 ## ファイル構成
 
@@ -46,6 +46,7 @@ HTML / CSS / JavaScript のみで構成されたWebアプリケーションで�
 - `changelog.json` — 既存用語の修正・関連用語追加の履歴データ（修正履歴タブが表示）
 - `manifest.json` — ホーム画面追加（PWA）用のWeb App Manifest
 - `icon.png` — ホーム画面アイコン
+- `sw.js` — ホーム画面に追加したアプリでの表示が更新されない問題を防ぐService Worker（network-first）
 - `.github/workflows/pages.yml` — GitHub Pagesへの自動デプロイ用ワークフロー
 
 ## 免責事項

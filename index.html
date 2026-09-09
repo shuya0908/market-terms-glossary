@@ -2017,3 +2017,23 @@
   } // end init()
 })();
 </script>
+<script>
+// ホーム画面に追加した状態（standalone表示）ではページやfetchの結果が長期間キャッシュされ、
+// GitHub Pages側を更新してもアプリ側に反映されないことがあるための対策。
+// sw.js（network-first）を登録し、更新が見つかったら即座に有効化した上で1回だけ再読み込みする。
+if("serviceWorker" in navigator){
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("sw.js").then(function(reg){
+      reg.addEventListener("updatefound", function(){
+        var installing = reg.installing;
+        if(!installing) return;
+        installing.addEventListener("statechange", function(){
+          if(installing.state === "activated" && navigator.serviceWorker.controller){
+            location.reload();
+          }
+        });
+      });
+    }).catch(function(err){ console.error("Service Workerの登録に失敗しました。", err); });
+  });
+}
+</script>
