@@ -1446,22 +1446,34 @@
       mtq_stats: safeGet("mtq_stats") || {attempts:0, correct:0}
     };
     var json = JSON.stringify(payload, null, 2);
-    var dl = null;
-    try{
-      if(window.claude && typeof window.claude.use === "function"){
-        dl = await window.claude.use("downloads");
-      }
-    }catch(e){ dl = null; }
-    if(!dl){
-      await showAlert("この表示環境ではファイルの保存機能を利用できません。");
-      return;
-    }
     var now = new Date();
     var filename = "market-terms-backup-" + now.getFullYear() + pad2(now.getMonth()+1) + pad2(now.getDate()) + "-" + pad2(now.getHours()) + pad2(now.getMinutes()) + ".json";
+    var blob = new Blob([json], {type: "application/json"});
+
+    // iOSでホーム画面に追加した状態（standalone表示）ではBlobのダウンロードリンクが
+    // 機能しないことがあるため、対応環境ではまずWeb Share APIで共有シートを開き、
+    // 「ファイルに保存」等を選べるようにする。
     try{
-      await dl.save({filename: filename, data: json});
+      var file = new File([blob], filename, {type: "application/json"});
+      if(navigator.canShare && navigator.canShare({files: [file]})){
+        await navigator.share({files: [file], title: filename});
+        return;
+      }
     }catch(err){
-      if(err && err.code === "declined") return;
+      if(err && err.name === "AbortError") return;
+      // 共有に失敗した場合は下のダウンロードリンク方式にフォールバックする
+    }
+
+    try{
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+    }catch(err){
       await showAlert("バックアップの保存に失敗しました。" + (err && err.message ? "（" + err.message + "）" : ""));
     }
   });
