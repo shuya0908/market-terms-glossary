@@ -338,6 +338,45 @@
   .changelog-diff .after{color:var(--success-ink);background:var(--success-soft);padding:1px 3px;border-radius:3px;display:block;}
   .changelog-reason{font-size:.82rem;color:var(--ink-muted);line-height:1.7;margin:6px 0 0;}
 
+  .changelog-calendar{border:1px solid var(--border);border-radius:4px;background:var(--surface);padding:14px 16px 16px;margin-bottom:14px;}
+  .cal-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}
+  .cal-title{font-family:var(--font-display);font-weight:700;font-size:1rem;margin:0;font-variant-numeric:tabular-nums;}
+  .cal-nav-btn{
+    background:none;border:1px solid var(--border);border-radius:4px;
+    width:28px;height:28px;line-height:1;font-size:1rem;
+    color:var(--ink);cursor:pointer;
+  }
+  .cal-nav-btn:hover{background:var(--surface-alt);}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+  .cal-weekday{font-family:var(--font-mono);font-size:.7rem;color:var(--ink-muted);text-align:center;padding:2px 0 6px;}
+  .cal-day{
+    --h:0;
+    position:relative;
+    aspect-ratio:1;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    border-radius:4px;border:1px solid transparent;background:none;
+    font-family:var(--font-mono);font-size:.8rem;color:var(--ink-muted);
+    padding:0;
+  }
+  .cal-day-empty{visibility:hidden;}
+  .cal-day.today{border-color:var(--border);box-shadow:inset 0 0 0 1px var(--accent);}
+  .cal-day.has-entries{color:var(--ink);background:var(--surface-alt);border-color:var(--border);cursor:pointer;}
+  .cal-day.has-entries:hover{background:var(--accent-soft);}
+  .cal-day.has-entries[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);}
+  .cal-day-dots{display:flex;gap:2px;height:5px;}
+  .cal-dot{width:5px;height:5px;border-radius:50%;}
+  .cal-dot.correction{background:var(--danger);}
+  .cal-dot.addition{background:var(--success);}
+  .cal-dot.deletion{background:var(--ink-muted);}
+  .cal-day.has-entries[aria-pressed="true"] .cal-dot{background:var(--accent-ink);}
+
+  .changelog-filter-bar{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    font-size:.85rem;color:var(--ink-muted);margin:0 2px 14px;
+  }
+  .changelog-filter-bar button{background:none;border:none;padding:0;color:var(--accent);cursor:pointer;font-size:.82rem;font-family:inherit;}
+  .changelog-filter-bar button:hover{text-decoration:underline;}
+
   .refs{margin-top:34px;padding-top:20px;border-top:1px solid var(--border);}
   .refs h2{font-family:var(--font-display);font-size:.95rem;margin:0 0 10px;}
   .refs ul{margin:0;padding-left:1.2em;color:var(--ink-muted);font-size:.85rem;line-height:1.9;}
@@ -1005,6 +1044,19 @@
 
   <div class="panel" id="panelChangelog" role="tabpanel" aria-labelledby="tabChangelogBtn" hidden>
     <p class="lead">用語集（<code>terms.json</code>）に加えた既存用語の修正・関連用語の追加を、日付つきで記録しています。用語集本体には現在の内容のみが載るため、何をいつ・なぜ直したかはここで追えます。</p>
+    <div class="changelog-calendar" id="changelogCalendar">
+      <div class="cal-header">
+        <button type="button" class="cal-nav-btn" id="changelogCalPrev" aria-label="前の月">‹</button>
+        <p class="cal-title" id="changelogCalTitle"></p>
+        <button type="button" class="cal-nav-btn" id="changelogCalNext" aria-label="次の月">›</button>
+      </div>
+      <div class="cal-grid" id="changelogCalGrid"></div>
+    </div>
+    <div class="changelog-filter-bar" id="changelogFilterBar" hidden>
+      <span class="changelog-filter-label"></span>
+      <button type="button" id="changelogFilterClear">すべて表示に戻す</button>
+    </div>
+    <div class="empty" id="changelogHint" hidden>カレンダーの日付（色の付いた日）を選ぶと、その日の修正・追加・削除の一覧が表示されます。</div>
     <div class="changelog-list" id="changelogList"></div>
     <div class="empty" id="changelogEmpty" hidden>まだ修正履歴はありません。</div>
   </div>
@@ -1170,9 +1222,17 @@
   // See CLAUDE.md "修正履歴（CHANGELOGタブ）の運用" for the authoring rules.
   var CHANGELOG_TYPE_LABEL = { correction: "修正", addition: "追加", deletion: "削除" };
   var changelogEntries = [];
+  var changelogByDate = {};
   var changelogListEl = document.getElementById("changelogList");
   var changelogEmptyEl = document.getElementById("changelogEmpty");
+  var changelogCalGridEl = document.getElementById("changelogCalGrid");
+  var changelogCalTitleEl = document.getElementById("changelogCalTitle");
+  var changelogFilterBarEl = document.getElementById("changelogFilterBar");
+  var changelogHintEl = document.getElementById("changelogHint");
   var changelogRendered = false;
+  var changelogViewInited = false;
+  var changelogViewYear, changelogViewMonth; // month is 0-indexed
+  var changelogSelectedDate = null; // "YYYY-MM-DD" or null (= show all)
   fetch("changelog.json")
     .then(function(res){ return res.ok ? res.json() : []; })
     .then(function(entries){ changelogEntries = entries || []; if(changelogRendered) renderChangelog(); })
@@ -1183,15 +1243,98 @@
       return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c];
     });
   }
+  // 日本標準時（JST）基準の「今日」の日付文字列（YYYY-MM-DD）。
+  function todayJST(){
+    return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tokyo" }).format(new Date());
+  }
+  function indexChangelogByDate(){
+    changelogByDate = {};
+    changelogEntries.forEach(function(entry){
+      (changelogByDate[entry.date] = changelogByDate[entry.date] || []).push(entry);
+    });
+  }
   function renderChangelog(){
     changelogRendered = true;
+    indexChangelogByDate();
+    if(!changelogViewInited){
+      changelogViewInited = true;
+      var base = todayJST();
+      changelogEntries.forEach(function(entry){ if(entry.date > base) base = entry.date; });
+      changelogViewYear = parseInt(base.slice(0, 4), 10);
+      changelogViewMonth = parseInt(base.slice(5, 7), 10) - 1;
+    }
+    renderChangelogCalendar();
+    renderChangelogList();
+  }
+  function renderChangelogCalendar(){
+    changelogCalTitleEl.textContent = changelogViewYear + "年" + (changelogViewMonth + 1) + "月";
+    changelogCalGridEl.innerHTML = "";
+    ["日", "月", "火", "水", "木", "金", "土"].forEach(function(w){
+      var el = document.createElement("div");
+      el.className = "cal-weekday";
+      el.textContent = w;
+      changelogCalGridEl.appendChild(el);
+    });
+    var firstDow = new Date(changelogViewYear, changelogViewMonth, 1).getDay();
+    var daysInMonth = new Date(changelogViewYear, changelogViewMonth + 1, 0).getDate();
+    var today = todayJST();
+    for(var i = 0; i < firstDow; i++){
+      var blank = document.createElement("div");
+      blank.className = "cal-day cal-day-empty";
+      changelogCalGridEl.appendChild(blank);
+    }
+    for(var d = 1; d <= daysInMonth; d++){
+      var dateStr = changelogViewYear + "-" + String(changelogViewMonth + 1).padStart(2, "0") + "-" + String(d).padStart(2, "0");
+      var entries = changelogByDate[dateStr];
+      var cell;
+      if(entries && entries.length){
+        cell = document.createElement("button");
+        cell.type = "button";
+        cell.className = "cal-day has-entries" + (dateStr === today ? " today" : "");
+        cell.setAttribute("aria-pressed", String(changelogSelectedDate === dateStr));
+        cell.setAttribute("aria-label", dateStr + "（" + entries.length + "件の修正・追加・削除）");
+        cell.dataset.date = dateStr;
+        var types = {};
+        entries.forEach(function(entry){ types[entry.type] = true; });
+        var dotsHtml = Object.keys(types).map(function(t){
+          return '<span class="cal-dot ' + escapeHtml(t) + '"></span>';
+        }).join("");
+        cell.innerHTML = '<span class="cal-day-num">' + d + '</span><span class="cal-day-dots">' + dotsHtml + '</span>';
+        cell.addEventListener("click", function(){
+          var date = this.dataset.date;
+          changelogSelectedDate = (changelogSelectedDate === date) ? null : date;
+          renderChangelogCalendar();
+          renderChangelogList();
+        });
+      } else {
+        cell = document.createElement("div");
+        cell.className = "cal-day" + (dateStr === today ? " today" : "");
+        cell.innerHTML = '<span class="cal-day-num">' + d + '</span>';
+      }
+      changelogCalGridEl.appendChild(cell);
+    }
+  }
+  function renderChangelogList(){
     changelogListEl.innerHTML = "";
+    // 日付未選択時はカレンダーだけを見せ、一覧は表示しない
+    // （履歴が増えるとページが際限なく縦に伸びるのを防ぐため）。
+    if(!changelogSelectedDate){
+      changelogFilterBarEl.hidden = true;
+      changelogEmptyEl.hidden = changelogEntries.length > 0;
+      changelogHintEl.hidden = changelogEntries.length === 0;
+      return;
+    }
+    changelogHintEl.hidden = true;
+    changelogEmptyEl.hidden = true;
+    var source = changelogEntries.filter(function(entry){ return entry.date === changelogSelectedDate; });
+    changelogFilterBarEl.hidden = false;
+    changelogFilterBarEl.querySelector(".changelog-filter-label").textContent =
+      changelogSelectedDate + " の修正・追加・削除（" + source.length + "件）";
     // Newest first; entries sharing a date keep their most-recently-appended-last
     // order reversed, so later edits on the same day still sort above earlier ones.
-    var sorted = changelogEntries.slice().sort(function(a, b){
+    var sorted = source.slice().sort(function(a, b){
       return b.date === a.date ? 0 : (b.date > a.date ? 1 : -1);
     });
-    changelogEmptyEl.hidden = sorted.length > 0;
     sorted.forEach(function(entry){
       var cat = CATS[entry.c];
       var item = document.createElement("div");
@@ -1220,6 +1363,21 @@
       changelogListEl.appendChild(item);
     });
   }
+  document.getElementById("changelogCalPrev").addEventListener("click", function(){
+    changelogViewMonth--;
+    if(changelogViewMonth < 0){ changelogViewMonth = 11; changelogViewYear--; }
+    renderChangelogCalendar();
+  });
+  document.getElementById("changelogCalNext").addEventListener("click", function(){
+    changelogViewMonth++;
+    if(changelogViewMonth > 11){ changelogViewMonth = 0; changelogViewYear++; }
+    renderChangelogCalendar();
+  });
+  document.getElementById("changelogFilterClear").addEventListener("click", function(){
+    changelogSelectedDate = null;
+    renderChangelogCalendar();
+    renderChangelogList();
+  });
 
   /* ---------- marks (watchlist) ---------- */
   // Marks are keyed by stable term id. Older saved marks (from before terms had
