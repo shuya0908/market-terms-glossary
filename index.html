@@ -1377,7 +1377,7 @@
     var items = GLOSSARY.filter(function(g){
       if(!activeCats.has(g.c)) return false;
       if(!q) return true;
-      return g.t.toLowerCase().indexOf(q) > -1 || g.k.toLowerCase().indexOf(q) > -1 || g.d.indexOf(q) > -1;
+      return g.t.toLowerCase().indexOf(q) > -1 || g.k.toLowerCase().indexOf(q) > -1 || g.d.toLowerCase().indexOf(q) > -1;
     });
     items = sortByCategory(items);
     countEl.textContent = items.length + " / " + GLOSSARY.length + " 語";
