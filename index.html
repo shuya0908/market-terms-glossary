@@ -1056,6 +1056,7 @@
       <span class="changelog-filter-label"></span>
       <button type="button" id="changelogFilterClear">すべて表示に戻す</button>
     </div>
+    <div class="empty" id="changelogHint" hidden>カレンダーの日付（色の付いた日）を選ぶと、その日の修正・追加・削除の一覧が表示されます。</div>
     <div class="changelog-list" id="changelogList"></div>
     <div class="empty" id="changelogEmpty" hidden>まだ修正履歴はありません。</div>
   </div>
@@ -1227,6 +1228,7 @@
   var changelogCalGridEl = document.getElementById("changelogCalGrid");
   var changelogCalTitleEl = document.getElementById("changelogCalTitle");
   var changelogFilterBarEl = document.getElementById("changelogFilterBar");
+  var changelogHintEl = document.getElementById("changelogHint");
   var changelogRendered = false;
   var changelogViewInited = false;
   var changelogViewYear, changelogViewMonth; // month is 0-indexed
@@ -1314,21 +1316,25 @@
   }
   function renderChangelogList(){
     changelogListEl.innerHTML = "";
-    var source = changelogEntries;
-    if(changelogSelectedDate){
-      source = changelogEntries.filter(function(entry){ return entry.date === changelogSelectedDate; });
-      changelogFilterBarEl.hidden = false;
-      changelogFilterBarEl.querySelector(".changelog-filter-label").textContent =
-        changelogSelectedDate + " の修正・追加・削除（" + source.length + "件）";
-    } else {
+    // 日付未選択時はカレンダーだけを見せ、一覧は表示しない
+    // （履歴が増えるとページが際限なく縦に伸びるのを防ぐため）。
+    if(!changelogSelectedDate){
       changelogFilterBarEl.hidden = true;
+      changelogEmptyEl.hidden = changelogEntries.length > 0;
+      changelogHintEl.hidden = changelogEntries.length === 0;
+      return;
     }
+    changelogHintEl.hidden = true;
+    changelogEmptyEl.hidden = true;
+    var source = changelogEntries.filter(function(entry){ return entry.date === changelogSelectedDate; });
+    changelogFilterBarEl.hidden = false;
+    changelogFilterBarEl.querySelector(".changelog-filter-label").textContent =
+      changelogSelectedDate + " の修正・追加・削除（" + source.length + "件）";
     // Newest first; entries sharing a date keep their most-recently-appended-last
     // order reversed, so later edits on the same day still sort above earlier ones.
     var sorted = source.slice().sort(function(a, b){
       return b.date === a.date ? 0 : (b.date > a.date ? 1 : -1);
     });
-    changelogEmptyEl.hidden = sorted.length > 0;
     sorted.forEach(function(entry){
       var cat = CATS[entry.c];
       var item = document.createElement("div");
