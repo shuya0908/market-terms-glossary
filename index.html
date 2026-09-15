@@ -1911,6 +1911,18 @@
     return pool[Math.floor(Math.random() * pool.length)];
   }
 
+  // 穴埋めの空欄対象を選ぶ。解説文中の語だけでなく、用語名そのものも対象に含める。
+  // 用語名を空欄にする場合は「定義文から用語を当てる」出題になるため、
+  // isTerm:true を返し、呼び出し側で用語名を隠して定義文を見せる表示に切り替える。
+  function pickBlankTarget(term, freq, dict){
+    var candidates = [];
+    var defWord = pickBlankWord(term, freq, dict);
+    if(defWord) candidates.push({isTerm:false, word:defWord});
+    if(term.t) candidates.push({isTerm:true, word:term.t});
+    if(candidates.length === 0) return null;
+    return candidates[Math.floor(Math.random() * candidates.length)];
+  }
+
   function maskDefinition(def, word){
     var idx = def.indexOf(word);
     if(idx < 0) return null;
@@ -1933,7 +1945,7 @@
     // 「穴埋めのみ」モードでは、穴埋め候補語が無い用語をそもそも出題対象から除外する
     // （候補が無い場合に他形式へ差し替えるフォールバックは mixed モード用に残す）
     var eligiblePool = mode === "fillblank"
-      ? pool.filter(function(g){ return !!pickBlankWord(g, blankFreq, blankDict); })
+      ? pool.filter(function(g){ return !!pickBlankTarget(g, blankFreq, blankDict); })
       : pool;
     var chosen = shuffle(eligiblePool).slice(0, count);
     return chosen.map(function(g){
@@ -1943,10 +1955,14 @@
         type = (fixedTypes && fixedTypes[g.id]) || MIXED_TYPES[Math.floor(Math.random() * MIXED_TYPES.length)];
       }
       if(type === "fillblank"){
-        var blankWord = pickBlankWord(g, blankFreq, blankDict);
-        var masked = blankWord ? maskDefinition(g.d, blankWord) : null;
+        var target = pickBlankTarget(g, blankFreq, blankDict);
+        if(target && target.isTerm){
+          var termMasked = {before:"用語：", blank:"＿".repeat(target.word.length), after:""};
+          return {term:g, type:type, blankWord:target.word, blankIsTerm:true, masked:termMasked, correctTerm:g};
+        }
+        var masked = target ? maskDefinition(g.d, target.word) : null;
         if(masked){
-          return {term:g, type:type, blankWord:blankWord, masked:masked, correctTerm:g};
+          return {term:g, type:type, blankWord:target.word, blankIsTerm:false, masked:masked, correctTerm:g};
         }
         type = "term2def";
       }
@@ -1958,7 +1974,7 @@
       if(type === "def2term"){
         return {term:g, type:type, prompt:g.d, correctTerm:g, options:optionTerms};
       } else {
-        return {term:g, type:type, prompt:g.t + "（" + g.k + "）", correctTerm:g, options:optionTerms};
+        return {term:g, type:type, prompt:g.t, correctTerm:g, options:optionTerms};
       }
     });
   }
@@ -2002,7 +2018,7 @@
     tagEl.style.setProperty("--h", CATS[q.term.c].hue);
     var markBtn = document.getElementById("qMarkBtn");
     markBtn.setAttribute("data-id", q.term.id);
-    markBtn.setAttribute("aria-label", q.term.t + "をマークする");
+    markBtn.setAttribute("aria-label", q.blankIsTerm ? "この問題をマークする" : q.term.t + "をマークする");
     var isMarked = markedSet.has(q.term.id);
     markBtn.setAttribute("aria-pressed", isMarked);
     markBtn.textContent = isMarked ? "★" : "☆";
@@ -2015,8 +2031,13 @@
     var feedbackEl = document.getElementById("qBlankFeedback");
 
     if(q.type === "fillblank"){
-      promptEl.textContent = q.term.t + "（" + q.term.k + "）";
-      promptEl.className = "q-prompt is-term";
+      if(q.blankIsTerm){
+        promptEl.textContent = q.term.d;
+        promptEl.className = "q-prompt";
+      } else {
+        promptEl.textContent = q.term.t;
+        promptEl.className = "q-prompt is-term";
+      }
       defBlankEl.innerHTML = q.masked.before + '<span class="blank">'+q.masked.blank+'</span>' + q.masked.after;
       defBlankEl.hidden = false;
       optsEl.hidden = true;
@@ -2039,7 +2060,7 @@
       optsEl.innerHTML = "";
       q.options.forEach(function(optTerm){
         var mainText = q.type === "def2term" ? optTerm.t : optTerm.d;
-        var explainText = q.type === "def2term" ? optTerm.d : ("用語：" + optTerm.t + "（" + optTerm.k + "）");
+        var explainText = q.type === "def2term" ? optTerm.d : ("用語：" + optTerm.t);
         var btn = document.createElement("button");
         btn.className = "opt";
         btn.type = "button";
