@@ -1911,6 +1911,21 @@
     return pool[Math.floor(Math.random() * pool.length)];
   }
 
+  // 用語名を穴埋め対象にする際に使う語を選ぶ。「HFT（高頻度取引）」のような
+  // （　）別名表記を持つ用語では、見出し語・カッコ内の別名のどちらを空欄に
+  // してもよいが、カッコ記号自体を空欄に含めたり、見出し語とカッコ内の別名を
+  // またいで1つの空欄にしたりはしない（extractCoreTermWordsが両者を
+  // 別々の語として返すため、そのいずれか1語だけを選べばよい）。
+  // ローマ数字だけの断片（「バーゼルI/II/III」の「II」等）は単独では
+  // 答えを特定できないため候補から除外する。
+  function pickTermWord(term){
+    var parts = extractCoreTermWords(term.t).filter(function(w){
+      return w.length >= 2 && !/^[ivxlcdm]+$/i.test(w);
+    });
+    if(parts.length === 0) return null;
+    return parts[Math.floor(Math.random() * parts.length)];
+  }
+
   // 穴埋めの空欄対象を選ぶ。解説文中の語だけでなく、用語名そのものも対象に含める。
   // 用語名を空欄にする場合は「定義文から用語を当てる」出題になるため、
   // isTerm:true を返し、呼び出し側で用語名を隠して定義文を見せる表示に切り替える。
@@ -1918,7 +1933,8 @@
     var candidates = [];
     var defWord = pickBlankWord(term, freq, dict);
     if(defWord) candidates.push({isTerm:false, word:defWord});
-    if(term.t) candidates.push({isTerm:true, word:term.t});
+    var termWord = term.t ? pickTermWord(term) : null;
+    if(termWord) candidates.push({isTerm:true, word:termWord});
     if(candidates.length === 0) return null;
     return candidates[Math.floor(Math.random() * candidates.length)];
   }
