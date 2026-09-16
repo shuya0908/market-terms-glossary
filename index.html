@@ -1918,7 +1918,11 @@
     var candidates = [];
     var defWord = pickBlankWord(term, freq, dict);
     if(defWord) candidates.push({isTerm:false, word:defWord});
-    if(term.t) candidates.push({isTerm:true, word:term.t});
+    // 用語名に「HFT（高頻度取引）」のような（　）別名表記が含まれる場合、
+    // カッコごと空欄にすると記号まで含めて一字一句入力させることになり
+    // 出題として不適切なため、見出し語（カッコより前の部分）のみを対象にする。
+    var termHead = term.t ? extractCoreTermWords(term.t)[0] : null;
+    if(termHead) candidates.push({isTerm:true, word:termHead});
     if(candidates.length === 0) return null;
     return candidates[Math.floor(Math.random() * candidates.length)];
   }
