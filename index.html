@@ -424,6 +424,7 @@
   .progress-fill{height:100%;background:var(--accent);transition:width .25s ease;}
   .q-card{margin-bottom:20px;}
   .q-eyebrow{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .q-lead{font-size:.8rem;font-weight:700;color:var(--ink-muted);margin:0 0 6px;font-family:var(--font-display);}
   .q-prompt{font-size:1.08rem;line-height:1.75;margin:0;font-family:var(--font-body);}
   .q-prompt.is-term{font-family:var(--font-display);font-weight:700;font-size:1.4rem;}
   .options{display:grid;gap:10px;}
@@ -493,6 +494,7 @@
   .missed-item:last-child{border-bottom:none;}
   .missed-item .term{font-size:.94rem;}
   .missed-item .def{margin-top:4px;}
+  .def-scene{display:block;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);color:var(--ink-muted);font-size:.84rem;}
   .none-missed{color:var(--ink-muted);font-size:.9rem;padding:16px 0;}
   .result-actions{display:flex;gap:10px;}
 
@@ -994,6 +996,7 @@
               <option value="def2term">定義 → 用語を選ぶ</option>
               <option value="term2def">用語 → 定義を選ぶ</option>
               <option value="fillblank">説明文の穴埋め（記述式）</option>
+              <option value="scenario">実務シーン → 用語を選ぶ</option>
             </select>
           </div>
         </div>
@@ -1013,6 +1016,7 @@
           <span class="tag" id="qTag" style="--h:40"></span>
           <button type="button" class="mark-btn" id="qMarkBtn" aria-pressed="false" aria-label="この用語をマークする">☆</button>
         </div>
+        <p class="q-lead" id="qLead" hidden>次の場面を表す用語はどれか。</p>
         <p class="q-prompt" id="qPrompt"></p>
         <p class="q-def-blank" id="qDefBlank" hidden></p>
       </div>
@@ -1441,6 +1445,11 @@
     }
   });
 
+  // 実務シーン（terms.json の任意フィールド s）を定義文の下に添える
+  function sceneHTML(g){
+    return g.s ? '<span class="def-scene">実務シーン：'+g.s+'</span>' : '';
+  }
+
   /* ---------- shared card builder ---------- */
   function createCard(g, opts){
     opts = opts || {};
@@ -1459,7 +1468,7 @@
       '</div>' +
       '<div><p class="term">'+g.t+'</p><span class="kana">'+g.k+'</span></div>' +
       '<button type="button" class="def-toggle" aria-expanded="false">定義を見る ▾</button>' +
-      '<p class="def" hidden>'+g.d+'</p>';
+      '<p class="def" hidden>'+g.d+sceneHTML(g)+'</p>';
 
     var markBtn = card.querySelector(".mark-btn");
     markBtn.addEventListener("click", function(){
@@ -1966,14 +1975,17 @@
     var blankFreq = buildDefWordFrequency(GLOSSARY, blankDict);
     // 「穴埋めのみ」モードでは、穴埋め候補語が無い用語をそもそも出題対象から除外する
     // （候補が無い場合に他形式へ差し替えるフォールバックは mixed モード用に残す）
+    // 「実務シーン」モードでは、場面文（s）が書かれている用語だけを出題対象にする
     var eligiblePool = mode === "fillblank"
       ? pool.filter(function(g){ return !!pickBlankTarget(g, blankFreq, blankDict); })
+      : mode === "scenario"
+      ? pool.filter(function(g){ return !!g.s; })
       : pool;
     var chosen = shuffle(eligiblePool).slice(0, count);
     return chosen.map(function(g){
       var type = mode;
       if(mode === "mixed"){
-        var MIXED_TYPES = ["def2term", "term2def", "fillblank"];
+        var MIXED_TYPES = g.s ? ["def2term", "term2def", "fillblank", "scenario"] : ["def2term", "term2def", "fillblank"];
         type = (fixedTypes && fixedTypes[g.id]) || MIXED_TYPES[Math.floor(Math.random() * MIXED_TYPES.length)];
       }
       if(type === "fillblank"){
@@ -1993,7 +2005,9 @@
       var distractSource = samePool.length >= 3 ? samePool : otherPool;
       var distractors = shuffle(distractSource).slice(0, 3);
       var optionTerms = shuffle([g].concat(distractors));
-      if(type === "def2term"){
+      if(type === "scenario"){
+        return {term:g, type:type, prompt:g.s, correctTerm:g, options:optionTerms};
+      } else if(type === "def2term"){
         return {term:g, type:type, prompt:g.d, correctTerm:g, options:optionTerms};
       } else {
         return {term:g, type:type, prompt:g.t, correctTerm:g, options:optionTerms};
@@ -2013,6 +2027,10 @@
     var questions = buildQuestions(pool, count, mode);
     if(mode === "fillblank" && questions.length === 0){
       setupWarn.textContent = "選択したカテゴリには穴埋め形式で出題できる用語がありません。カテゴリを増やすか、別の出題形式を選んでください。";
+      return;
+    }
+    if(mode === "scenario" && questions.length === 0){
+      setupWarn.textContent = "選択したカテゴリには実務シーン形式で出題できる用語がありません。カテゴリを増やすか、別の出題形式を選んでください。";
       return;
     }
     quiz = {
@@ -2045,6 +2063,7 @@
     markBtn.setAttribute("aria-pressed", isMarked);
     markBtn.textContent = isMarked ? "★" : "☆";
     var promptEl = document.getElementById("qPrompt");
+    document.getElementById("qLead").hidden = q.type !== "scenario";
     var defBlankEl = document.getElementById("qDefBlank");
     var optsEl = document.getElementById("qOptions");
     var fillEl = document.getElementById("qFillBlank");
@@ -2081,8 +2100,9 @@
       optsEl.hidden = false;
       optsEl.innerHTML = "";
       q.options.forEach(function(optTerm){
-        var mainText = q.type === "def2term" ? optTerm.t : optTerm.d;
-        var explainText = q.type === "def2term" ? optTerm.d : ("用語：" + optTerm.t);
+        var chooseTerm = q.type === "def2term" || q.type === "scenario";
+        var mainText = chooseTerm ? optTerm.t : optTerm.d;
+        var explainText = chooseTerm ? optTerm.d : ("用語：" + optTerm.t);
         var btn = document.createElement("button");
         btn.className = "opt";
         btn.type = "button";
@@ -2145,7 +2165,7 @@
       b.disabled = true;
       b.querySelector(".opt-explain").hidden = false;
       var mainText = b.querySelector(".opt-main").textContent;
-      var isThisCorrect = q.type === "def2term" ? mainText === q.correctTerm.t : mainText === q.correctTerm.d;
+      var isThisCorrect = (q.type === "def2term" || q.type === "scenario") ? mainText === q.correctTerm.t : mainText === q.correctTerm.d;
       if(isThisCorrect) b.classList.add("correct");
       else if(b === btn) b.classList.add("wrong");
     });
@@ -2190,7 +2210,7 @@
       retryMissedBtn.hidden = true;
     } else {
       missedListEl.innerHTML = missed.map(function(r){
-        return '<div class="missed-item"><p class="term">'+r.term.t+'</p><p class="def">'+r.term.d+'</p></div>';
+        return '<div class="missed-item"><p class="term">'+r.term.t+'</p><p class="def">'+r.term.d+(r.type === "scenario" ? sceneHTML(r.term) : '')+'</p></div>';
       }).join("");
       retryMissedBtn.hidden = false;
     }
