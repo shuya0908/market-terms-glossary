@@ -1808,13 +1808,16 @@
 
   // 「FXスポット（直物為替）」のような用語名から、実際の語として使われうる
   // 部分（見出し語と、カッコ内の別名・読み替え）を取り出す。
+  // 中黒（・）は「イン・ザ・マネー」のようにカタカナ語の区切りとして使われて
+  // おり、別名同士の区切りではないため分割しない（分割すると「マネー」だけが
+  // 用語当ての正解になる等の不具合になる）。別名同士は／・/・、・,で区切る。
   function extractCoreTermWords(t){
     var out = [];
     var m = t.match(/^([^（(]+)[（(]([^）)]+)[）)]/);
     if(m){
       var head = m[1].trim();
       if(head) out.push(head);
-      m[2].split(/[・\/、,]/).forEach(function(s){ s = s.trim(); if(s) out.push(s); });
+      m[2].split(/[\/／、,]/).forEach(function(s){ s = s.trim(); if(s) out.push(s); });
     } else {
       var whole = t.trim();
       if(whole) out.push(whole);
@@ -1964,10 +1967,21 @@
     };
   }
 
+  // 中黒・空白の有無（「イン・ザ・マネー」と「インザマネー」）は区別しない
   function normalizeAnswer(s){
-    return (s || "").trim().replace(/[Ａ-Ｚａ-ｚ０-９]/g, function(ch){
+    return (s || "").replace(/[・･\s]/g, "").replace(/[Ａ-Ｚａ-ｚ０-９]/g, function(ch){
       return String.fromCharCode(ch.charCodeAt(0) - 0xFEE0);
     }).toLowerCase();
+  }
+
+  // 用語名を空欄にした出題では、空欄に選んだ語だけでなく、見出し語・別名の
+  // どれを答えても正解とする（「ITM（イン・ザ・マネー）」ならITMでも
+  // イン・ザ・マネーでもよい）。
+  function isBlankAnswerCorrect(q, input){
+    var ans = normalizeAnswer(input);
+    if(ans === "") return false;
+    var accepted = q.blankIsTerm ? extractCoreTermWords(q.term.t).concat([q.blankWord]) : [q.blankWord];
+    return accepted.some(function(w){ return normalizeAnswer(w) === ans; });
   }
 
   function buildQuestions(pool, count, mode, fixedTypes){
@@ -2123,7 +2137,7 @@
     var inputEl = document.getElementById("qBlankInput");
     var submitBtn = document.getElementById("qBlankSubmit");
     var feedbackEl = document.getElementById("qBlankFeedback");
-    var isCorrect = normalizeAnswer(inputEl.value) !== "" && normalizeAnswer(inputEl.value) === normalizeAnswer(q.blankWord);
+    var isCorrect = isBlankAnswerCorrect(q, inputEl.value);
     if(isCorrect) quiz.correct++;
     else markTerm(q.term.id);
     quiz.results.push({term:q.term, correct:isCorrect, type:q.type});
@@ -2133,7 +2147,7 @@
     inputEl.classList.add(isCorrect ? "correct" : "wrong");
     feedbackEl.hidden = false;
     feedbackEl.className = "fillblank-feedback " + (isCorrect ? "is-correct" : "is-wrong");
-    feedbackEl.textContent = isCorrect ? "正解です。" : "不正解。正解は「" + q.blankWord + "」です。";
+    feedbackEl.textContent = isCorrect ? "正解です。" : "不正解。正解は「" + (q.blankIsTerm ? q.term.t : q.blankWord) + "」です。";
     document.getElementById("nextBtn").disabled = false;
   }
 
