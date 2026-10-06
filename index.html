@@ -608,6 +608,7 @@
         <li>Euro short-term rate (€STR) | European Central Bank — https://www.ecb.europa.eu/stats/financial_markets_and_interest_rates/euro_short-term_rate/html/index.en.html</li>
         <li>LIBOR transition | Financial Conduct Authority — https://www.fca.org.uk/markets/libor-transition</li>
         <li>IFRS Foundation — https://www.ifrs.org/</li>
+        <li>U.S. Securities and Exchange Commission — https://www.sec.gov/</li>
       </ul>
     </div>
   </div>
@@ -1124,6 +1125,7 @@
     accounting: { label:"会計",       hue:275 },
     fx:         { label:"為替取引（FX）", hue:125 },
     bond:       { label:"債券・マネーマーケット", hue:175 },
+    fund:       { label:"投資信託・ファンド", hue:245 },
     quant:      { label:"クオンツ・プライシングモデル", hue:45  },
     risk:       { label:"リスク指標・ポートフォリオ理論", hue:110 },
     margin:     { label:"担保・与信管理", hue:5   },
@@ -1833,7 +1835,9 @@
     "CET",
     // 同様に、「Tier2」「バーゼルIII」から「Tier」「III」だけが切り出され、
     // 数字やカタカナ部分抜きでは答えを特定できない断片になってしまう語
-    "Tier","III"
+    "Tier","III",
+    // 「Act/360」「Act/365」から「Act」だけが切り出され、日数計算の方式を特定できない断片になる語
+    "Act"
   ]);
   // 漢字・カタカナ・アルファベット・数字の文字種をまたいで連結しないよう、
   // 文字種ごとに独立したパターンでまとめる（例：「2営業日後」を1語として
@@ -1866,7 +1870,7 @@
   // 誤った組み合わせは BLANK_BROKEN_WORDS で明示的に除外する。
   // 「年以内」のように、直前の数字（穴埋め候補としては別途除外済み）が
   // ないと意味をなさない語も、同様に BLANK_BROKEN_WORDS で除外する。
-  var BLANK_BROKEN_WORDS = new Set(["将来生","随時付","一時止","追加差","段階上","年以内","規律付","資金繰"]);
+  var BLANK_BROKEN_WORDS = new Set(["将来生","随時付","一時止","追加差","段階上","年以内","規律付","資金繰","手仕舞"]);
 
   function isFollowedByHiragana(def, run){
     var idx = -1;
