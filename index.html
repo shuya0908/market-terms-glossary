@@ -336,6 +336,13 @@
   .changelog-diff{font-size:.85rem;line-height:1.75;margin:0 0 6px;}
   .changelog-diff .before{color:var(--danger-ink);background:var(--danger-soft);text-decoration:line-through;text-decoration-color:var(--danger);padding:1px 3px;border-radius:3px;display:block;margin-bottom:4px;}
   .changelog-diff .after{color:var(--success-ink);background:var(--success-soft);padding:1px 3px;border-radius:3px;display:block;}
+  /* 修正（correction）は修正前・修正後の全文を並べ、変わった箇所だけを色付けする */
+  .changelog-diff .diff-row{display:block;margin-bottom:4px;padding:1px 0;}
+  .changelog-diff .diff-label{display:inline-block;font-size:.7rem;font-weight:700;line-height:1.5;padding:0 5px;margin-right:6px;border-radius:3px;border:1px solid currentColor;vertical-align:1px;}
+  .changelog-diff .diff-row.is-before .diff-label{color:var(--danger-ink);}
+  .changelog-diff .diff-row.is-after .diff-label{color:var(--success-ink);}
+  .changelog-diff del.diff-del{color:var(--danger-ink);background:var(--danger-soft);text-decoration:line-through;text-decoration-color:var(--danger);border-radius:2px;padding:0 1px;}
+  .changelog-diff ins.diff-ins{color:var(--success-ink);background:var(--success-soft);text-decoration:none;font-weight:700;border-radius:2px;padding:0 1px;}
   .changelog-reason{font-size:.82rem;color:var(--ink-muted);line-height:1.7;margin:6px 0 0;}
 
   .changelog-calendar{border:1px solid var(--border);border-radius:4px;background:var(--surface);padding:14px 16px 16px;margin-bottom:14px;}
@@ -1358,7 +1365,7 @@
       var typeLabel = CHANGELOG_TYPE_LABEL[entry.type] || entry.type;
       var diffHtml;
       if(entry.type === "correction" && entry.before){
-        diffHtml = '<p class="changelog-diff"><span class="before">'+escapeHtml(entry.before)+'</span><span class="after">'+escapeHtml(entry.after)+'</span></p>';
+        diffHtml = renderCorrectionDiff(entry.before, entry.after || "");
       } else if(entry.type === "deletion"){
         diffHtml = '<p class="changelog-diff"><span class="before">'+escapeHtml(entry.before)+'</span></p>';
       } else {
@@ -1378,6 +1385,70 @@
       changelogListEl.appendChild(item);
     });
   }
+  // 修正前後の説明文を文字単位で比較し、[{t:"eq"|"del"|"ins", s:文字列}] を返す。
+  // 説明文は最大120字程度なので、LCS（最長共通部分列）の単純なDPで十分軽い。
+  function diffChars(a, b){
+    var A = Array.from(a), B = Array.from(b), n = A.length, m = B.length;
+    var dp = [];
+    for(var i = 0; i <= n; i++){ dp.push(new Array(m + 1).fill(0)); }
+    for(var i2 = n - 1; i2 >= 0; i2--){
+      for(var j2 = m - 1; j2 >= 0; j2--){
+        dp[i2][j2] = A[i2] === B[j2] ? dp[i2+1][j2+1] + 1 : Math.max(dp[i2+1][j2], dp[i2][j2+1]);
+      }
+    }
+    var ops = [];
+    var push = function(t, ch){
+      var last = ops[ops.length - 1];
+      if(last && last.t === t) last.s += ch; else ops.push({ t:t, s:ch });
+    };
+    var x = 0, y = 0;
+    while(x < n && y < m){
+      if(A[x] === B[y]){ push("eq", A[x]); x++; y++; }
+      else if(dp[x+1][y] >= dp[x][y+1]){ push("del", A[x]); x++; }
+      else { push("ins", B[y]); y++; }
+    }
+    while(x < n){ push("del", A[x++]); }
+    while(y < m){ push("ins", B[y++]); }
+    return ops;
+  }
+
+  // 文字単位の差分は、日本語では「の」「、」のような1〜2文字だけが偶然一致して
+  // 変更箇所が細切れになりやすい。変更箇所に挟まれた短い一致部分は変更に
+  // 含めてしまい、「この語句がこう変わった」と読める塊にまとめる。
+  function mergeDiffChunks(ops){
+    var out = [], del = "", ins = "";
+    var flush = function(){
+      if(del) out.push({ t:"del", s:del });
+      if(ins) out.push({ t:"ins", s:ins });
+      del = ""; ins = "";
+    };
+    ops.forEach(function(op, i){
+      if(op.t === "del"){ del += op.s; return; }
+      if(op.t === "ins"){ ins += op.s; return; }
+      var short = Array.from(op.s).length <= 2;
+      if(short && (del || ins) && i < ops.length - 1){ del += op.s; ins += op.s; return; }
+      flush();
+      out.push(op);
+    });
+    flush();
+    return out;
+  }
+
+  function renderCorrectionDiff(before, after){
+    var ops = mergeDiffChunks(diffChars(before, after));
+    var beforeHtml = "", afterHtml = "";
+    ops.forEach(function(op){
+      var text = escapeHtml(op.s);
+      if(op.t === "eq"){ beforeHtml += text; afterHtml += text; }
+      else if(op.t === "del"){ beforeHtml += '<del class="diff-del">'+text+'</del>'; }
+      else { afterHtml += '<ins class="diff-ins">'+text+'</ins>'; }
+    });
+    return '<p class="changelog-diff">' +
+      '<span class="diff-row is-before"><span class="diff-label">修正前</span>'+beforeHtml+'</span>' +
+      '<span class="diff-row is-after"><span class="diff-label">修正後</span>'+afterHtml+'</span>' +
+    '</p>';
+  }
+
   document.getElementById("changelogCalPrev").addEventListener("click", function(){
     changelogViewMonth--;
     if(changelogViewMonth < 0){ changelogViewMonth = 11; changelogViewYear--; }
