@@ -105,6 +105,7 @@ node -e 'require("./terms.json").forEach(x=>{if(!x.s)return;const n=[...x.s].len
 - `BLANK_WORD_RE` で定義文から漢字・カタカナ・英字・数字それぞれの連なりを候補として切り出し、`extractBlankCandidates()` が `BLANK_ATOMIC_WORDS`（用語集の見出し語＋手動登録した一般語の辞書）を使って意味のある単語単位に分割する。
 - `pickBlankWord()` が、`BLANK_STOPWORDS`（正解が一意に定まらない汎用語）を除外し、かつ用語集全体での出現頻度（DF）が低い＝その用語に固有な語を優先して空欄の正解を選ぶ。
 - 候補が1つも残らない用語は穴埋め形式の出題対象から自動的に除外される（`pickBlankWord()` が `null` を返す）。
+- 空欄の位置は `findBlankIndex()` が、`extractBlankCandidates()` と同じ分割規則で定義文を語に切り、**候補として抽出された語の出現位置**を隠す（単純な `indexOf` では、別の語の一部として先に出てくる同じ文字列に当たり、「評価損益を算出」の「評価損」だけを隠して「＿＿＿益」と表示してしまうため）。複合語の一部だけが空欄になる表示が出た場合は、その複合語（例：「評価損益」）を `BLANK_ATOMIC_WORDS` に追加して1語として扱わせる。
 
 新しい用語を追加した後は、次の手順で確認すること。
 

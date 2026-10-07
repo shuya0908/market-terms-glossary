@@ -1857,7 +1857,7 @@
     "機能","停止","緊急","総額","時価","日本","協定","法律","規定","国際",
     "空売り","値動き","担保付き","条件付き","通貨建て","外貨建て",
     "権利付最終日","権利確定日","制度信用","一般信用","株主優待",
-    "証券金融会社","最高料率"
+    "証券金融会社","最高料率","評価損益"
   ];
 
   // 定義文中で、切り出した漢字の連なりの直後にひらがなが続くケースには2種類ある。
@@ -2043,8 +2043,41 @@
     return candidates[Math.floor(Math.random() * candidates.length)];
   }
 
-  function maskDefinition(def, word){
-    var idx = def.indexOf(word);
+  // 空欄にする語の位置を探す。単純な indexOf だと、別の語の一部として先に出てくる
+  // 同じ文字列に当たってしまう（例：「評価損益を算出」の中の「評価損」を、
+  // 後半に出てくる単独の語「評価損」の代わりに隠してしまい、「＿＿＿益」と表示される）。
+  // そのため extractBlankCandidates() と同じ規則で定義文を単語に分割し、
+  // 候補として抽出された語と一致する出現位置を優先する。
+  function findBlankIndex(def, word, dict){
+    var re = new RegExp(BLANK_WORD_RE.source, "g");
+    var m;
+    while((m = re.exec(def)) !== null){
+      var run = m[0], base = m.index;
+      var toks = [];
+      if(!/^[一-鿿]+$/.test(run) || dict.has(run)){
+        toks.push([run, base]);
+      } else if(run.length <= 3){
+        var cand = run;
+        if(isFollowedByHiragana(def, run) && !BLANK_BROKEN_WORDS.has(run)){
+          cand = extendIntoOkurigana(def, run, dict) || run;
+        }
+        toks.push([cand, base]);
+      } else {
+        var parts = splitKnownWords(run, dict);
+        if(parts){
+          var off = 0;
+          parts.forEach(function(p){ toks.push([p, base + off]); off += p.length; });
+        }
+      }
+      for(var i = 0; i < toks.length; i++){
+        if(toks[i][0] === word) return toks[i][1];
+      }
+    }
+    return def.indexOf(word);
+  }
+
+  function maskDefinition(def, word, dict){
+    var idx = findBlankIndex(def, word, dict);
     if(idx < 0) return null;
     return {
       before: def.slice(0, idx),
@@ -2094,7 +2127,7 @@
           var termMasked = {before:"用語：", blank:"＿".repeat(target.word.length), after:""};
           return {term:g, type:type, blankWord:target.word, blankIsTerm:true, masked:termMasked, correctTerm:g};
         }
-        var masked = target ? maskDefinition(g.d, target.word) : null;
+        var masked = target ? maskDefinition(g.d, target.word, blankDict) : null;
         if(masked){
           return {term:g, type:type, blankWord:target.word, blankIsTerm:false, masked:masked, correctTerm:g};
         }
