@@ -501,6 +501,9 @@
   .missed-item:last-child{border-bottom:none;}
   .missed-item .term{font-size:.94rem;}
   .missed-item .def{margin-top:4px;}
+  .def-rel{display:block;margin-top:8px;color:var(--ink);font-size:.86rem;line-height:1.7;}
+  .def-rel .rel-line{display:block;}
+  .def-rel .rel-mark{display:inline-block;min-width:1.4em;margin-right:4px;color:var(--accent);font-weight:700;}
   .def-scene{display:block;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);color:var(--ink-muted);font-size:.84rem;}
   .none-missed{color:var(--ink-muted);font-size:.9rem;padding:16px 0;}
   .result-actions{display:flex;gap:10px;}
@@ -1013,6 +1016,7 @@
               <option value="term2def">用語 → 定義を選ぶ</option>
               <option value="fillblank">説明文の穴埋め（記述式）</option>
               <option value="scenario">実務シーン → 用語を選ぶ</option>
+              <option value="relation">類義語・対義語を選ぶ</option>
             </select>
           </div>
         </div>
@@ -1527,6 +1531,27 @@
     }
   });
 
+  // 類義語・対義語（terms.json の任意フィールド syn / ant。相手の見出し語 t を配列で持つ）。
+  // 対義語（対になる語）は「↔ ◯◯」、類義語は「≒ ◯◯」として、定義文の後ろに添える。
+  var TERM_BY_T = {};
+  GLOSSARY.forEach(function(g){ TERM_BY_T[g.t] = g; });
+  function shortName(t){ return t.replace(/[（(].*$/, ""); }
+  function relatedTerms(g, key){
+    return (g[key] || []).map(function(t){ return TERM_BY_T[t]; }).filter(Boolean);
+  }
+  function hasRelation(g){
+    return relatedTerms(g, "ant").length > 0 || relatedTerms(g, "syn").length > 0;
+  }
+  function relHTML(g){
+    var ant = relatedTerms(g, "ant"), syn = relatedTerms(g, "syn");
+    if(!ant.length && !syn.length) return "";
+    var names = function(list){ return list.map(function(x){ return escapeHtml(shortName(x.t)); }).join("、"); };
+    var h = '<span class="def-rel">';
+    if(ant.length) h += '<span class="rel-line"><span class="rel-mark" title="対義語（対になる語）">\u2194\uFE0E</span>' + names(ant) + '</span>';
+    if(syn.length) h += '<span class="rel-line"><span class="rel-mark" title="類義語（意味の近い語）">\u2248</span>' + names(syn) + '</span>';
+    return h + '</span>';
+  }
+
   // 実務シーン（terms.json の任意フィールド s）を定義文の下に添える
   function sceneHTML(g){
     return g.s ? '<span class="def-scene">実務シーン：'+g.s+'</span>' : '';
@@ -1550,7 +1575,7 @@
       '</div>' +
       '<div><p class="term">'+g.t+'</p><span class="kana">'+g.k+'</span></div>' +
       '<button type="button" class="def-toggle" aria-expanded="false">定義を見る ▾</button>' +
-      '<p class="def" hidden>'+g.d+sceneHTML(g)+'</p>';
+      '<p class="def" hidden>'+g.d+relHTML(g)+sceneHTML(g)+'</p>';
 
     var markBtn = card.querySelector(".mark-btn");
     markBtn.addEventListener("click", function(){
@@ -2115,12 +2140,16 @@
       ? pool.filter(function(g){ return !!pickBlankTarget(g, blankFreq, blankDict); })
       : mode === "scenario"
       ? pool.filter(function(g){ return !!g.s; })
+      : mode === "relation"
+      ? pool.filter(hasRelation)
       : pool;
     var chosen = shuffle(eligiblePool).slice(0, count);
     return chosen.map(function(g){
       var type = mode;
       if(mode === "mixed"){
-        var MIXED_TYPES = g.s ? ["def2term", "term2def", "fillblank", "scenario"] : ["def2term", "term2def", "fillblank"];
+        var MIXED_TYPES = ["def2term", "term2def", "fillblank"];
+        if(g.s) MIXED_TYPES.push("scenario");
+        if(hasRelation(g)) MIXED_TYPES.push("relation");
         type = (fixedTypes && fixedTypes[g.id]) || MIXED_TYPES[Math.floor(Math.random() * MIXED_TYPES.length)];
       }
       if(type === "fillblank"){
@@ -2134,6 +2163,21 @@
           return {term:g, type:type, blankWord:target.word, blankIsTerm:false, masked:masked, correctTerm:g};
         }
         type = "term2def";
+      }
+      if(type === "relation"){
+        // 出題する用語の類義語・対義語のうち1つを正解にし、本物の関係語を除いた同カテゴリの用語から誤答を作る
+        var rels = [];
+        relatedTerms(g, "ant").forEach(function(r){ rels.push({kind:"ant", term:r}); });
+        relatedTerms(g, "syn").forEach(function(r){ rels.push({kind:"syn", term:r}); });
+        var pick = rels[Math.floor(Math.random() * rels.length)];
+        var excluded = {};
+        excluded[g.id] = true;
+        rels.forEach(function(r){ excluded[r.term.id] = true; });
+        var relSame = GLOSSARY.filter(function(x){ return x.c === pick.term.c && !excluded[x.id]; });
+        var relOther = GLOSSARY.filter(function(x){ return !excluded[x.id]; });
+        var relDistractors = shuffle(relSame.length >= 3 ? relSame : relOther).slice(0, 3);
+        var relPrompt = "「" + shortName(g.t) + "」の" + (pick.kind === "ant" ? "対義語（対になる語）" : "類義語（意味の近い語）") + "はどれ？";
+        return {term:g, type:type, relKind:pick.kind, prompt:relPrompt, correctTerm:pick.term, options:shuffle([pick.term].concat(relDistractors))};
       }
       var samePool = GLOSSARY.filter(function(x){ return x.c === g.c && x.id !== g.id; });
       var otherPool = GLOSSARY.filter(function(x){ return x.id !== g.id; });
@@ -2162,6 +2206,10 @@
     var questions = buildQuestions(pool, count, mode);
     if(mode === "fillblank" && questions.length === 0){
       setupWarn.textContent = "選択したカテゴリには穴埋め形式で出題できる用語がありません。カテゴリを増やすか、別の出題形式を選んでください。";
+      return;
+    }
+    if(mode === "relation" && questions.length === 0){
+      setupWarn.textContent = "選択したカテゴリには類義語・対義語の形式で出題できる用語がありません。カテゴリを増やすか、別の出題形式を選んでください。";
       return;
     }
     if(mode === "scenario" && questions.length === 0){
@@ -2228,14 +2276,14 @@
       setTimeout(function(){ inputEl.focus(); }, 0);
     } else {
       promptEl.textContent = q.prompt;
-      promptEl.className = "q-prompt" + (q.type === "term2def" ? " is-term" : "");
+      promptEl.className = "q-prompt" + (q.type === "term2def" || q.type === "relation" ? " is-term" : "");
       defBlankEl.hidden = true;
       defBlankEl.innerHTML = "";
       fillEl.hidden = true;
       optsEl.hidden = false;
       optsEl.innerHTML = "";
       q.options.forEach(function(optTerm){
-        var chooseTerm = q.type === "def2term" || q.type === "scenario";
+        var chooseTerm = q.type === "def2term" || q.type === "scenario" || q.type === "relation";
         var mainText = chooseTerm ? optTerm.t : optTerm.d;
         var explainText = chooseTerm ? optTerm.d : ("用語：" + optTerm.t);
         var btn = document.createElement("button");
@@ -2300,7 +2348,7 @@
       b.disabled = true;
       b.querySelector(".opt-explain").hidden = false;
       var mainText = b.querySelector(".opt-main").textContent;
-      var isThisCorrect = (q.type === "def2term" || q.type === "scenario") ? mainText === q.correctTerm.t : mainText === q.correctTerm.d;
+      var isThisCorrect = (q.type === "def2term" || q.type === "scenario" || q.type === "relation") ? mainText === q.correctTerm.t : mainText === q.correctTerm.d;
       if(isThisCorrect) b.classList.add("correct");
       else if(b === btn) b.classList.add("wrong");
     });
@@ -2345,7 +2393,7 @@
       retryMissedBtn.hidden = true;
     } else {
       missedListEl.innerHTML = missed.map(function(r){
-        return '<div class="missed-item"><p class="term">'+r.term.t+'</p><p class="def">'+r.term.d+(r.type === "scenario" ? sceneHTML(r.term) : '')+'</p></div>';
+        return '<div class="missed-item"><p class="term">'+r.term.t+'</p><p class="def">'+r.term.d+relHTML(r.term)+(r.type === "scenario" ? sceneHTML(r.term) : '')+'</p></div>';
       }).join("");
       retryMissedBtn.hidden = false;
     }
