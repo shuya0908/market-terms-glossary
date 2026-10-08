@@ -447,6 +447,8 @@
     color:var(--ink);
     cursor:pointer;
   }
+  .q-asked{margin:0 0 14px;padding:10px 14px;border-left:3px solid var(--accent);background:var(--accent-soft);color:var(--ink);font-size:.86rem;line-height:1.7;border-radius:0 3px 3px 0;}
+  .q-asked .q-asked-name{display:block;font-weight:700;margin-bottom:2px;}
   .opt-main{display:block;}
   .opt-explain{
     display:block;
@@ -1475,6 +1477,7 @@
         <p class="q-prompt" id="qPrompt"></p>
         <p class="q-def-blank" id="qDefBlank" hidden></p>
       </div>
+      <div class="q-asked" id="qAsked" hidden></div>
       <div class="options" id="qOptions"></div>
       <div class="fillblank" id="qFillBlank" hidden>
         <div class="fillblank-row">
@@ -2731,6 +2734,8 @@
         optsEl.appendChild(btn);
       });
     }
+    document.getElementById("qAsked").hidden = true;
+    document.getElementById("qAsked").innerHTML = "";
     document.getElementById("nextBtn").disabled = true;
   }
 
@@ -2787,6 +2792,12 @@
       if(isThisCorrect) b.classList.add("correct");
       else if(b === btn) b.classList.add("wrong");
     });
+    if(q.type === "relation"){
+      // 類義語・対義語の問題では、出題した用語そのものの意味も解答後に示す
+      var askedEl = document.getElementById("qAsked");
+      askedEl.innerHTML = '<span class="q-asked-name">出題した「' + escapeHtml(shortName(q.term.t)) + '」の意味</span>' + escapeHtml(q.term.d) + relHTML(q.term);
+      askedEl.hidden = false;
+    }
     document.getElementById("nextBtn").disabled = false;
   }
 
