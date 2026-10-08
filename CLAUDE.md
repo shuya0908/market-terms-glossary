@@ -102,6 +102,17 @@ node -e 'require("./terms.json").forEach(x=>{if(!x.s)return;const n=[...x.s].len
 node -e 'const T=require("./terms.json");T.forEach(x=>["ant","syn"].forEach(k=>(x[k]||[]).forEach(r=>{const y=T.find(z=>z.t===r);if(!y)console.log("MISSING",x.t,"->",r);else if(!(y[k]||[]).includes(x.t))console.log("ASYM",k,x.t,"->",r)})))'
 ```
 
+## 図解タブ（`panelDiagrams`）の図解の追加
+
+文章だけでは像を結びにくい仕組み（規制の枠組み、キャッシュフロー、日程、損益など）は、`index.html` の図解タブに `<div class="diagram-card">` として追加する。既存のカードに合わせ、次の点を守ること。
+
+- インラインSVG（`viewBox` 指定・幅100%）で描き、色は `var(--ink)` `var(--ink-muted)` `var(--accent)` `var(--success)` `var(--danger)` と、それぞれの `-soft` / `-ink` などCSS変数を使う（ライト・ダークの両方で読めるよう、色を直接指定しない）。文字には `class="dg-text"`（数値は `dg-mono`）を付ける。
+- `<svg>` の `aria-label` に、図の内容を文章で説明する（「test」などの仮の文字列を残さない）。矢印の `<marker>` の `id` は、他の図と重複しないものにする。
+- 図の下の `<figcaption>` に、図が表す仕組みを2〜3文で説明する。数値例は「説明用の仮の例」であることを明記する。
+- 日本語のテキストは図中で折り返されないため、ボックスの幅に収まるよう行を分けて書く（目安：フォントサイズ10.5で、1文字が約10.5px）。追加後は、Playwright等でライト・ダーク両方のスクリーンショットを撮り、文字のはみ出しや重なりがないことを確認する。
+- 図の追加で、用語集の記述の誤りや、図解に必要な未登録の用語が見つかった場合は、「用語を追加する際の既存用語の正当性チェックと関連語追加」の手順に従う。
+- 図解タブ冒頭の説明文（`<p class="lead">`）と `README.md` の「図解タブ」の説明に、追加した図の内容を書き足す。
+
 ## 用語を追加する際の参考文献の更新（重要）
 
 `terms.json` に新しい用語を追加する際、その用語の情報源とした参考文献（Webサイト・記事など）を、`index.html` の用語集画面下部にある「参考文献」セクション（`<div class="refs">` 内の `<ul>`）にも追加すること。
