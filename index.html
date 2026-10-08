@@ -503,7 +503,7 @@
   .missed-item .def{margin-top:4px;}
   .def-rel{display:block;margin-top:8px;color:var(--ink);font-size:.86rem;line-height:1.7;}
   .def-rel .rel-line{display:block;}
-  .def-rel .rel-mark{display:inline-block;min-width:1.4em;margin-right:4px;color:var(--accent);font-weight:700;}
+  .def-rel .rel-mark{display:inline-block;margin-right:8px;padding:0 6px;border:1px solid var(--accent);border-radius:3px;color:var(--accent);font-size:.74rem;font-weight:700;line-height:1.6;}
   .def-scene{display:block;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);color:var(--ink-muted);font-size:.84rem;}
   .none-missed{color:var(--ink-muted);font-size:.9rem;padding:16px 0;}
   .result-actions{display:flex;gap:10px;}
@@ -1967,7 +1967,7 @@
   });
 
   // 類義語・対義語（terms.json の任意フィールド syn / ant。相手の見出し語 t を配列で持つ）。
-  // 対義語（対になる語）は「↔ ◯◯」、類義語は「≒ ◯◯」として、定義文の後ろに添える。
+  // 対義語・類義語は、それぞれ「対義語 ◯◯」「類義語 ◯◯」のラベル付きで、定義文の後ろに添える。
   var TERM_BY_T = {};
   GLOSSARY.forEach(function(g){ TERM_BY_T[g.t] = g; });
   function shortName(t){ return t.replace(/[（(].*$/, ""); }
@@ -1982,8 +1982,8 @@
     if(!ant.length && !syn.length) return "";
     var names = function(list){ return list.map(function(x){ return escapeHtml(shortName(x.t)); }).join("、"); };
     var h = '<span class="def-rel">';
-    if(ant.length) h += '<span class="rel-line"><span class="rel-mark" title="対義語（対になる語）">\u2194\uFE0E</span>' + names(ant) + '</span>';
-    if(syn.length) h += '<span class="rel-line"><span class="rel-mark" title="類義語（意味の近い語）">\u2248</span>' + names(syn) + '</span>';
+    if(ant.length) h += '<span class="rel-line"><span class="rel-mark">対義語</span>' + names(ant) + '</span>';
+    if(syn.length) h += '<span class="rel-line"><span class="rel-mark">類義語</span>' + names(syn) + '</span>';
     return h + '</span>';
   }
 
