@@ -150,7 +150,7 @@ node -e 'const T=require("./terms.json");T.forEach(x=>["ant","syn"].forEach(k=>(
 
 - データソースは `terms.json` と同じ階層に置く **`changelog.json`**。`index.html` から `terms.json` と同様に `fetch()` して読み込み、`renderChangelog()`（`index.html` 内）がカードとして描画する。`main` へのpushだけでGitHub Pagesに反映される点も他のデータファイルと同じ（他のファイルと同様に手動同期は不要）。
 - スキーマは配列で、各要素は以下のフィールドを持つオブジェクト。
-  - `date`: `YYYY-MM-DD` 形式の日付文字列。**日本標準時（JST）** を基準に、その修正・追加・削除を行った日を記録する（`TZ=Asia/Tokyo date +%Y-%m-%d` 等で取得できる）。
+  - `date`: `YYYY-MM-DD` 形式の日付文字列。**日本標準時（JST）** を基準に、その修正・追加・削除を行った日を記録する。**作業環境（クラウドのコンテナ等）の時計はUTCのことが多く、`date +%F` や JavaScript の `new Date().toISOString()` をそのまま使うとUTCの日付になり、JSTの0:00〜8:59に作業すると前日の日付になってしまう**（実際に、JSTの深夜・早朝に実行された定期見直しで、19件が1日前の日付で記録されていた）。日付は必ず `TZ=Asia/Tokyo date +%Y-%m-%d` で取得すること（Node.jsなら `new Date(Date.now()+9*3600e3).toISOString().slice(0,10)`）。
   - `type`: `"correction"`（既存用語の定義修正）／ `"addition"`（新しい用語の追加。既存用語の修正に伴う関連用語の追加か、既存用語とは無関係な純粋新規追加かを問わない）／ `"deletion"`（既存用語の削除）のいずれか。
   - `term`: 対象用語の `t`（表記）。`terms.json` 側の表記と一致させる（`deletion` の場合は削除前の表記）。
   - `c`: 対象用語のカテゴリキー（`terms.json` の `c` と同じ）。タブ上でのタグ色付けに使う。
