@@ -1456,7 +1456,7 @@
               <option value="term2def">用語 → 定義を選ぶ</option>
               <option value="fillblank">説明文の穴埋め（記述式）</option>
               <option value="scenario">実務シーン → 用語を選ぶ</option>
-              <option value="relation">類義語・対義語を選ぶ</option>
+              <option value="relation">対義語を選ぶ</option>
             </select>
           </div>
         </div>
@@ -1972,8 +1972,10 @@
     }
   });
 
-  // 類義語・対義語（terms.json の任意フィールド syn / ant。相手の見出し語 t を配列で持つ）。
-  // 対義語・類義語は、それぞれ「対義語 ◯◯」「類義語 ◯◯」のラベル付きで、定義文の後ろに添える。
+  // 対義語・関連語（terms.json の任意フィールド ant / rel。相手の見出し語 t を配列で持つ）。
+  // それぞれ「対義語 ◯◯」「関連語 ◯◯」のラベル付きで、定義文の後ろに添える。
+  // クイズ（qMode の relation）は対義語だけを出題する。関連語は同じカテゴリに複数の
+  // 候補がありうるため、正解が1つに定まらず出題には使わない。
   var TERM_BY_T = {};
   GLOSSARY.forEach(function(g){ TERM_BY_T[g.t] = g; });
   function shortName(t){ return t.replace(/[（(].*$/, ""); }
@@ -1981,15 +1983,15 @@
     return (g[key] || []).map(function(t){ return TERM_BY_T[t]; }).filter(Boolean);
   }
   function hasRelation(g){
-    return relatedTerms(g, "ant").length > 0 || relatedTerms(g, "syn").length > 0;
+    return relatedTerms(g, "ant").length > 0;
   }
   function relHTML(g){
-    var ant = relatedTerms(g, "ant"), syn = relatedTerms(g, "syn");
-    if(!ant.length && !syn.length) return "";
+    var ant = relatedTerms(g, "ant"), rel = relatedTerms(g, "rel");
+    if(!ant.length && !rel.length) return "";
     var names = function(list){ return list.map(function(x){ return escapeHtml(shortName(x.t)); }).join("、"); };
     var h = '<span class="def-rel">';
     if(ant.length) h += '<span class="rel-line"><span class="rel-mark">対義語</span>' + names(ant) + '</span>';
-    if(syn.length) h += '<span class="rel-line"><span class="rel-mark">類義語</span>' + names(syn) + '</span>';
+    if(rel.length) h += '<span class="rel-line"><span class="rel-mark">関連語</span>' + names(rel) + '</span>';
     return h + '</span>';
   }
 
@@ -2606,18 +2608,18 @@
         type = "term2def";
       }
       if(type === "relation"){
-        // 出題する用語の類義語・対義語のうち1つを正解にし、本物の関係語を除いた同カテゴリの用語から誤答を作る
-        var rels = [];
-        relatedTerms(g, "ant").forEach(function(r){ rels.push({kind:"ant", term:r}); });
-        relatedTerms(g, "syn").forEach(function(r){ rels.push({kind:"syn", term:r}); });
+        // 出題する用語の対義語のうち1つを正解にし、対義語・関連語を除いた同カテゴリの用語から誤答を作る
+        //（関連語を誤答に混ぜると、正解と紛らわしい選択肢になるため除く）
+        var rels = relatedTerms(g, "ant").map(function(r){ return {kind:"ant", term:r}; });
         var pick = rels[Math.floor(Math.random() * rels.length)];
         var excluded = {};
         excluded[g.id] = true;
         rels.forEach(function(r){ excluded[r.term.id] = true; });
+        relatedTerms(g, "rel").forEach(function(r){ excluded[r.id] = true; });
         var relSame = GLOSSARY.filter(function(x){ return x.c === pick.term.c && !excluded[x.id]; });
         var relOther = GLOSSARY.filter(function(x){ return !excluded[x.id]; });
         var relDistractors = shuffle(relSame.length >= 3 ? relSame : relOther).slice(0, 3);
-        var relPrompt = "「" + shortName(g.t) + "」の" + (pick.kind === "ant" ? "対義語（対になる語）" : "類義語（意味の近い語）") + "はどれ？";
+        var relPrompt = "「" + shortName(g.t) + "」の対義語（対になる語）はどれ？";
         return {term:g, type:type, relKind:pick.kind, prompt:relPrompt, correctTerm:pick.term, options:shuffle([pick.term].concat(relDistractors))};
       }
       var samePool = GLOSSARY.filter(function(x){ return x.c === g.c && x.id !== g.id; });
@@ -2650,7 +2652,7 @@
       return;
     }
     if(mode === "relation" && questions.length === 0){
-      setupWarn.textContent = "選択したカテゴリには類義語・対義語の形式で出題できる用語がありません。カテゴリを増やすか、別の出題形式を選んでください。";
+      setupWarn.textContent = "選択したカテゴリには対義語の形式で出題できる用語がありません。カテゴリを増やすか、別の出題形式を選んでください。";
       return;
     }
     if(mode === "scenario" && questions.length === 0){
@@ -2796,7 +2798,7 @@
       else if(b === btn) b.classList.add("wrong");
     });
     if(q.type === "relation"){
-      // 類義語・対義語の問題では、出題した用語そのものの意味も解答後に示す
+      // 対義語の問題では、出題した用語そのものの意味も解答後に示す
       var askedEl = document.getElementById("qAsked");
       askedEl.innerHTML = '<span class="q-asked-name">出題した「' + escapeHtml(shortName(q.term.t)) + '」の意味</span>' + escapeHtml(q.term.d) + relHTML(q.term);
       askedEl.hidden = false;
