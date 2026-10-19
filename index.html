@@ -2384,7 +2384,7 @@
   // 誤った組み合わせは BLANK_BROKEN_WORDS で明示的に除外する。
   // 「年以内」のように、直前の数字（穴埋め候補としては別途除外済み）が
   // ないと意味をなさない語も、同様に BLANK_BROKEN_WORDS で除外する。
-  var BLANK_BROKEN_WORDS = new Set(["将来生","随時付","一時止","追加差","段階上","年以内","規律付","資金繰","手仕舞"]);
+  var BLANK_BROKEN_WORDS = new Set(["将来生","随時付","一時止","追加差","段階上","年以内","規律付","資金繰","手仕舞","SIB"]);
 
   function isFollowedByHiragana(def, run){
     var idx = -1;
