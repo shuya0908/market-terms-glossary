@@ -626,7 +626,7 @@
   <div class="panel" id="panelDiagrams" role="tabpanel" aria-labelledby="tabDiagramsBtn" hidden>
 
     <div class="diagrams">
-      <p class="lead">用語だけでは像を結びにくい仕組みを図解します。板の読み方、注文が決済に至るまでの流れ、オプションの損益、証拠金と値洗い、イールドカーブ、レポ取引の資金・証券フロー、VaRと期待ショートフォールの関係に加えて、バーゼル規制の3つの柱と自己資本の構成、トレーディング勘定とバンキング勘定、金利スワップと通貨スワップ、証券化商品のトランシェ、配当と権利の日程、ストリップヘッジとスタックヘッジ、現物決済と差金決済、先物為替レートとスワップポイント、CDSの仕組みを扱います。</p>
+      <p class="lead">用語だけでは像を結びにくい仕組みを図解します。板の読み方、注文が決済に至るまでの流れ、オプションの損益、証拠金と値洗い、イールドカーブ、レポ取引の資金・証券フロー、VaRと期待ショートフォールの関係に加えて、バーゼル規制の3つの柱と自己資本の構成、トレーディング勘定とバンキング勘定、金利スワップと通貨スワップ、証券化商品のトランシェ、配当と権利の日程、ストリップヘッジとスタックヘッジ、現物決済と差金決済、先物為替レートとスワップポイント、CDSの仕組み、IORBとON RRPによるFF金利の誘導を扱います。</p>
 
       <div class="diagram-card">
         <h3>板（気配）の読み方</h3>
@@ -1418,6 +1418,48 @@
             <text x="330" y="229" text-anchor="middle" class="dg-text" font-size="10" fill="var(--ink-muted)">保証料の水準（CDSスプレッド）は参照企業の信用力が低いほど高くなる</text>
           </svg>
           <figcaption>CDSは、参照企業の信用リスクを移転する取引。保護の買い手は保護の売り手に保証料を支払う代わりに、信用事由が発生した際に損失の補償を受ける。債券を保有する投資家のヘッジに使えるほか、債券を保有せずに参照企業の信用力に対する見方を取る手段にもなる。</figcaption>
+        </figure>
+      </div>
+
+      <div class="diagram-card">
+        <h3>IORBとON RRPによるFF金利の誘導（米国）</h3>
+        <figure>
+          <svg viewBox="0 20 700 290" role="img" aria-label="FF金利の誘導目標レンジとIORB・ON RRPの関係。仮の例として誘導目標レンジを4.25%から4.50%とすると、IORBはレンジ内の4.40%、ON RRP金利はレンジ下限の4.25%に設定され、実効FF金利はその間の4.33%付近で推移する。銀行は連銀に預ければIORBが得られるため、それより低い金利では貸さない。準備預金を持てないMMFなどもON RRPで運用できるため、市場金利はON RRP金利を下回りにくい。">
+            <defs>
+              <marker id="dgK-a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/></marker>
+              <marker id="dgK-b" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--success)"/></marker>
+            </defs>
+            <text x="170" y="44" text-anchor="middle" class="dg-text" font-size="11" font-weight="700" fill="var(--ink)">FF金利の誘導目標レンジ</text>
+            <rect x="110" y="60" width="120" height="200" fill="var(--accent-soft)" stroke="var(--border)"/>
+            <text x="102" y="64" text-anchor="end" class="dg-text" font-size="10" fill="var(--ink-muted)">上限</text>
+            <text x="102" y="78" text-anchor="end" class="dg-mono" font-size="10" fill="var(--ink-muted)">4.50%</text>
+            <text x="102" y="250" text-anchor="end" class="dg-text" font-size="10" fill="var(--ink-muted)">下限</text>
+            <text x="102" y="264" text-anchor="end" class="dg-mono" font-size="10" fill="var(--ink-muted)">4.25%</text>
+            <line x1="110" y1="140" x2="230" y2="140" stroke="var(--accent)" stroke-width="2.4"/>
+            <text x="238" y="137" class="dg-text" font-size="10.5" font-weight="700" fill="var(--accent)">IORB</text>
+            <text x="238" y="151" class="dg-mono" font-size="10.5" fill="var(--accent)">4.40%</text>
+            <line x1="110" y1="196" x2="230" y2="196" stroke="var(--ink)" stroke-width="1.4" stroke-dasharray="5,3"/>
+            <text x="238" y="193" class="dg-text" font-size="10.5" font-weight="700" fill="var(--ink)">EFFR</text>
+            <text x="238" y="207" class="dg-mono" font-size="10.5" fill="var(--ink)">4.33%</text>
+            <line x1="110" y1="260" x2="230" y2="260" stroke="var(--success)" stroke-width="2.4"/>
+            <text x="238" y="257" class="dg-text" font-size="10.5" font-weight="700" fill="var(--success-ink)">ON RRP</text>
+            <text x="238" y="271" class="dg-mono" font-size="10.5" fill="var(--success-ink)">4.25%</text>
+            <rect x="350" y="56" width="330" height="84" rx="3" fill="var(--surface)" stroke="var(--accent)"/>
+            <text x="362" y="76" class="dg-text" font-size="11" font-weight="700" fill="var(--accent)">IORB（準備預金付利）＝主要な手段</text>
+            <text x="362" y="95" class="dg-text" font-size="10.5" fill="var(--ink)">銀行は連銀に預ければIORBが得られるため、</text>
+            <text x="362" y="111" class="dg-text" font-size="10.5" fill="var(--ink)">それより低い金利では他行に貸さない。</text>
+            <text x="362" y="127" class="dg-text" font-size="10.5" fill="var(--ink)">安く借りてIORBで預ける裁定も働く。</text>
+            <rect x="350" y="176" width="330" height="84" rx="3" fill="var(--surface)" stroke="var(--success)"/>
+            <text x="362" y="196" class="dg-text" font-size="11" font-weight="700" fill="var(--success-ink)">ON RRP（翌日物リバースレポ）＝下限の役割</text>
+            <text x="362" y="215" class="dg-text" font-size="10.5" fill="var(--ink)">準備預金を持てないMMFなども、国債担保で</text>
+            <text x="362" y="231" class="dg-text" font-size="10.5" fill="var(--ink)">連銀に預ければこの金利が得られるため、</text>
+            <text x="362" y="247" class="dg-text" font-size="10.5" fill="var(--ink)">市場金利がこれを下回りにくくなる。</text>
+            <line x1="350" y1="110" x2="290" y2="140" stroke="var(--accent)" stroke-width="1.3" marker-end="url(#dgK-a)"/>
+            <line x1="350" y1="235" x2="300" y2="258" stroke="var(--success)" stroke-width="1.3" marker-end="url(#dgK-b)"/>
+            <rect x="20" y="282" width="660" height="24" rx="3" fill="var(--surface-alt)" stroke="var(--border)"/>
+            <text x="350" y="298" text-anchor="middle" class="dg-text" font-size="10" fill="var(--ink-muted)">付利を受けられない貸し手（連邦住宅貸付銀行など）がIORBより低く貸すため、EFFRは両者の間で推移しやすい</text>
+          </svg>
+          <figcaption>準備預金が潤沢な米国では、FRBは準備預金の量ではなく金利の設定によってFF金利を誘導目標レンジ内に保っている。主要な手段であるIORBはレンジ内（上限よりやや低い水準）に設定され、補完的な手段であるON RRPの金利はレンジ下限に設定されて、準備預金を持てない参加者も含めた短期金利の下限となる。数値は説明用の仮の例で、実際の設定はFOMCの決定によって変わる。</figcaption>
         </figure>
       </div>
     </div>
