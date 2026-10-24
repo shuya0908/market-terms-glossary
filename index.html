@@ -307,7 +307,6 @@
   .cat-meta{margin-left:auto;font-family:var(--font-mono);font-size:.74rem;color:var(--ink-muted);white-space:nowrap;font-variant-numeric:tabular-nums;}
   .cat-body{padding:0 12px 12px;gap:8px;}
   .cat-body .card{border-left-width:1px;background:var(--surface-alt);}
-  .group-actions{margin-bottom:10px;}
   .coverage{margin:-6px 0 0;font-family:var(--font-mono);font-size:.76rem;color:var(--ink-muted);font-variant-numeric:tabular-nums;}
   .term{font-family:var(--font-display);font-weight:700;font-size:1.05rem;margin:0;}
   .kana{font-family:var(--font-mono);font-size:.72rem;color:var(--ink-muted);display:block;margin-top:2px;}
@@ -648,11 +647,6 @@
         <button type="button" class="btn-link" id="deselectAllCats">すべて解除</button>
       </div>
       <div class="chiprow" id="catFilter" role="group" aria-label="カテゴリで絞り込み"></div>
-    </div>
-    <div class="cat-actions group-actions">
-      <button type="button" class="btn-link" id="openAllGroups">すべて開く</button>
-      <span class="sep">/</span>
-      <button type="button" class="btn-link" id="closeAllGroups">すべて閉じる</button>
     </div>
     <div class="cat-groups" id="grid"></div>
     <div class="empty" id="empty" hidden>該当する用語が見つかりませんでした。</div>
@@ -2310,33 +2304,33 @@
         filled = true;
       }
     }
+    section._setOpen = setOpen;
     head.addEventListener("click", function(){
       var open = head.getAttribute("aria-expanded") !== "true";
+      if(!q && open){
+        // 検索していないときは一度に開けるカテゴリを1つにし、他のカテゴリは閉じる。
+        // 上にあるカテゴリが閉じると見出しの位置がずれるため、開いた見出しを画面の上端に合わせる
+        Array.prototype.forEach.call(gridEl.querySelectorAll(".cat-group"), function(other){
+          if(other !== section && other._setOpen) other._setOpen(false);
+        });
+      }
       setOpen(open);
       if(!q){
-        if(open) openCats.add(c); else openCats.delete(c);
+        openCats = new Set(open ? [c] : []);
         safeSet("mtq_open_cats", Array.from(openCats));
+        if(open && head.getBoundingClientRect().top < 0){
+          window.scrollTo(0, head.getBoundingClientRect().top + window.scrollY - 8);
+        }
       }
     });
-    setOpen(q ? true : openCats.has(c));
+    // 検索中は該当する用語があるカテゴリをすべて開く。検索していないときは、保存された開閉状態のうち
+    // 先頭の1つだけを開く（以前の版で複数開いた状態が保存されている場合に備える）
+    var firstOpen = CAT_ORDER.filter(function(k){ return openCats.has(k); })[0];
+    setOpen(q ? true : c === firstOpen);
     section.appendChild(head);
     section.appendChild(body);
     return section;
   }
-
-  function setAllGroups(open){
-    if(searchEl.value.trim()){
-      Array.prototype.forEach.call(gridEl.querySelectorAll(".cat-head"), function(h){
-        if((h.getAttribute("aria-expanded") === "true") !== open) h.click();
-      });
-      return;
-    }
-    openCats = new Set(open ? CAT_ORDER : []);
-    safeSet("mtq_open_cats", Array.from(openCats));
-    renderGlossary();
-  }
-  document.getElementById("openAllGroups").addEventListener("click", function(){ setAllGroups(true); });
-  document.getElementById("closeAllGroups").addEventListener("click", function(){ setAllGroups(false); });
 
   // 実務シーン（s）・実務判断（j）の登録状況
   (function(){
