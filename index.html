@@ -545,6 +545,8 @@
   .fillblank-input.correct{border-color:var(--success);background:var(--success-soft);color:var(--success-ink);}
   .fillblank-input.wrong{border-color:var(--danger);background:var(--danger-soft);color:var(--danger-ink);}
   .fillblank-feedback{margin:12px 0 0;font-size:.88rem;line-height:1.6;}
+  .fillblank-hint-row{display:flex;align-items:center;gap:10px;margin-top:10px;min-height:1.4em;}
+  .fillblank-hint{font-family:var(--font-mono);font-size:.82rem;color:var(--ink);font-variant-numeric:tabular-nums;}
   .fillblank-feedback.is-correct{color:var(--success-ink);}
   .fillblank-feedback.is-wrong{color:var(--danger-ink);}
 
@@ -1622,6 +1624,10 @@
         <div class="fillblank-row">
           <input type="text" id="qBlankInput" class="fillblank-input" autocomplete="off" placeholder="空欄に入る言葉を入力">
           <button class="btn" id="qBlankSubmit" type="button">解答する</button>
+        </div>
+        <div class="fillblank-hint-row">
+          <button type="button" class="btn-link" id="qBlankHint">ヒント（文字数を表示）</button>
+          <span class="fillblank-hint" id="qBlankHintText" hidden></span>
         </div>
         <p class="fillblank-feedback" id="qBlankFeedback" hidden></p>
       </div>
@@ -2804,12 +2810,14 @@
     return def.indexOf(word);
   }
 
+  // 空欄は答えの文字数が分からないよう常に同じ幅で表示し、文字数は「ヒント」ボタンを押したときだけ示す
+  var BLANK_PLACEHOLDER = "＿＿＿＿";
   function maskDefinition(def, word, dict){
     var idx = findBlankIndex(def, word, dict);
     if(idx < 0) return null;
     return {
       before: def.slice(0, idx),
-      blank: "＿".repeat(word.length),
+      blank: BLANK_PLACEHOLDER,
       after: def.slice(idx + word.length)
     };
   }
@@ -2907,7 +2915,7 @@
       if(type === "fillblank"){
         var target = pickBlankTarget(g, blankFreq, blankDict);
         if(target && target.isTerm){
-          var termMasked = {before:"用語：", blank:"＿".repeat(target.word.length), after:""};
+          var termMasked = {before:"用語：", blank:BLANK_PLACEHOLDER, after:""};
           return {term:g, type:type, blankWord:target.word, blankIsTerm:true, masked:termMasked, correctTerm:g};
         }
         var masked = target ? maskDefinition(g.d, target.word, blankDict) : null;
@@ -3044,6 +3052,11 @@
       submitBtn.disabled = false;
       feedbackEl.hidden = true;
       feedbackEl.textContent = "";
+      var hintBtn = document.getElementById("qBlankHint");
+      var hintText = document.getElementById("qBlankHintText");
+      hintBtn.hidden = false;
+      hintText.hidden = true;
+      hintText.textContent = "";
       setTimeout(function(){ inputEl.focus(); }, 0);
     } else {
       promptEl.textContent = q.prompt;
@@ -3113,6 +3126,7 @@
     inputEl.disabled = true;
     submitBtn.disabled = true;
     inputEl.classList.add(isCorrect ? "correct" : "wrong");
+    document.getElementById("qBlankHint").hidden = true;
     feedbackEl.hidden = false;
     feedbackEl.className = "fillblank-feedback " + (isCorrect ? "is-correct" : "is-wrong");
     feedbackEl.textContent = isCorrect ? "正解です。" : "不正解。正解は「" + (q.blankIsTerm ? q.term.t : q.blankWord) + "」です。";
@@ -3127,6 +3141,17 @@
   });
 
   document.getElementById("qBlankSubmit").addEventListener("click", onBlankAnswer);
+  // ヒント：空欄に入る語の文字数を示す（用語名を答える問題では、出題に選んだ表記の文字数）
+  document.getElementById("qBlankHint").addEventListener("click", function(){
+    var q = quiz && quiz.questions[quiz.index];
+    if(!q || q.type !== "fillblank") return;
+    var hintText = document.getElementById("qBlankHintText");
+    var alts = q.blankIsTerm ? extractCoreTermWords(q.term.t).filter(function(w){ return normalizeAnswer(w) !== normalizeAnswer(q.blankWord); }) : [];
+    hintText.textContent = "ヒント：" + Array.from(q.blankWord).length + "文字" + (alts.length ? "（別の表記でも正解）" : "");
+    hintText.hidden = false;
+    this.hidden = true;
+    document.getElementById("qBlankInput").focus();
+  });
   document.getElementById("qBlankInput").addEventListener("keydown", function(e){
     if(e.key === "Enter"){
       e.preventDefault();
