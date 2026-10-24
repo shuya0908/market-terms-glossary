@@ -266,15 +266,49 @@
     grid-template-columns:repeat(auto-fill,minmax(270px,1fr));
     gap:14px;
   }
+  /* 用語カード：閉じた状態は「用語名＋読み」の1行。行をタップすると定義が開く */
   .card{
     border:1px solid var(--border);
     border-left:3px solid hsl(var(--h) var(--chip-bg-s) 44%);
     border-radius:4px;
-    padding:15px 16px;
+    padding:10px 12px;
     background:var(--surface);
     display:flex;flex-direction:column;gap:8px;
   }
-  .card-top{display:flex;justify-content:space-between;align-items:center;gap:10px;}
+  .card-row{display:flex;align-items:center;gap:10px;}
+  .term-head{
+    flex:1;min-width:0;
+    display:flex;align-items:center;gap:8px;
+    background:none;border:none;padding:2px 0;margin:0;
+    font:inherit;color:inherit;text-align:left;cursor:pointer;
+  }
+  .term-lines{flex:1;min-width:0;display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 8px;}
+  .term-head .term{font-size:.98rem;}
+  .term-head .kana{display:inline;margin-top:0;}
+  .chev{color:var(--ink-muted);font-size:.8rem;transition:transform .15s;flex-shrink:0;}
+  [aria-expanded="true"] > .chev{transform:rotate(90deg);}
+
+  /* 用語集：カテゴリごとに折りたためる見出し */
+  .cat-groups{display:flex;flex-direction:column;gap:8px;}
+  .cat-group{
+    border:1px solid var(--border);
+    border-left:3px solid hsl(var(--h) var(--chip-bg-s) 44%);
+    border-radius:4px;
+    background:var(--surface);
+  }
+  .cat-head{
+    width:100%;
+    display:flex;align-items:center;gap:10px;
+    padding:12px 14px;
+    background:none;border:none;
+    font:inherit;color:var(--ink);text-align:left;cursor:pointer;
+  }
+  .cat-name{font-family:var(--font-display);font-weight:700;font-size:.95rem;}
+  .cat-meta{margin-left:auto;font-family:var(--font-mono);font-size:.74rem;color:var(--ink-muted);white-space:nowrap;font-variant-numeric:tabular-nums;}
+  .cat-body{padding:0 12px 12px;gap:8px;}
+  .cat-body .card{border-left-width:1px;background:var(--surface-alt);}
+  .group-actions{margin-bottom:10px;}
+  .coverage{margin:-6px 0 0;font-family:var(--font-mono);font-size:.76rem;color:var(--ink-muted);font-variant-numeric:tabular-nums;}
   .term{font-family:var(--font-display);font-weight:700;font-size:1.05rem;margin:0;}
   .kana{font-family:var(--font-mono);font-size:.72rem;color:var(--ink-muted);display:block;margin-top:2px;}
   .tag{
@@ -297,16 +331,6 @@
   }
   .mark-btn:hover{color:var(--accent);}
   .mark-btn[aria-pressed="true"]{color:var(--accent);}
-  .def-toggle{
-    align-self:flex-start;
-    background:none;border:none;padding:0;
-    font-family:var(--font-mono);
-    font-size:.74rem;
-    letter-spacing:.02em;
-    color:var(--accent);
-    cursor:pointer;
-  }
-  .def-toggle:hover{text-decoration:underline;}
   .def{font-size:.88rem;color:var(--ink);line-height:1.75;margin:0;}
   .empty{color:var(--ink-muted);font-size:.9rem;padding:30px 4px;text-align:center;}
 
@@ -385,7 +409,9 @@
   .changelog-filter-bar button:hover{text-decoration:underline;}
 
   .refs{margin-top:34px;padding-top:20px;border-top:1px solid var(--border);}
-  .refs h2{font-family:var(--font-display);font-size:.95rem;margin:0 0 10px;}
+  .refs summary{cursor:pointer;color:var(--ink-muted);}
+  .refs summary h2{display:inline;font-family:var(--font-display);font-size:.95rem;margin:0;color:var(--ink);}
+  .refs[open] summary{margin-bottom:10px;}
   .refs ul{margin:0;padding-left:1.2em;color:var(--ink-muted);font-size:.85rem;line-height:1.9;}
   .refs li{overflow-wrap:anywhere;word-break:break-word;}
   .refs li a{overflow-wrap:anywhere;word-break:break-word;}
@@ -582,6 +608,7 @@
         <input type="search" id="search" placeholder="用語・定義をキーワード検索…" aria-label="用語検索">
         <span class="count" id="count"></span>
       </div>
+      <p class="coverage" id="coverage"></p>
       <div class="cat-actions">
         <button type="button" class="btn-link" id="selectAllCats">すべて選択</button>
         <span class="sep">/</span>
@@ -589,11 +616,16 @@
       </div>
       <div class="chiprow" id="catFilter" role="group" aria-label="カテゴリで絞り込み"></div>
     </div>
-    <div class="grid" id="grid"></div>
+    <div class="cat-actions group-actions">
+      <button type="button" class="btn-link" id="openAllGroups">すべて開く</button>
+      <span class="sep">/</span>
+      <button type="button" class="btn-link" id="closeAllGroups">すべて閉じる</button>
+    </div>
+    <div class="cat-groups" id="grid"></div>
     <div class="empty" id="empty" hidden>該当する用語が見つかりませんでした。</div>
 
-    <div class="refs">
-      <h2>参考文献</h2>
+    <details class="refs">
+      <summary><h2 id="refsTitle">参考文献</h2></summary>
       <ul>
         <li>用語集 | 日本取引所グループ — https://www.jpx.co.jp/glossary/</li>
         <li>証券用語解説集｜野村證券 — https://www.nomura.co.jp/terms/</li>
@@ -622,7 +654,7 @@
         <li>IFRS Foundation — https://www.ifrs.org/</li>
         <li>U.S. Securities and Exchange Commission — https://www.sec.gov/</li>
       </ul>
-    </div>
+    </details>
   </div>
 
   <div class="panel" id="panelDiagrams" role="tabpanel" aria-labelledby="tabDiagramsBtn" hidden>
@@ -2065,13 +2097,16 @@
     var marked = markedSet.has(g.id);
     var markBtnHtml = '<button type="button" class="mark-btn" data-id="'+g.id+'" aria-pressed="'+marked+'" aria-label="'+g.t+'をマークする">'+(marked ? '★' : '☆')+'</button>';
 
+    // 閉じた状態は「用語名＋読み」の1行。用語集ではカテゴリの見出しの下に並ぶためタグを省き、
+    // カテゴリ混在で並ぶマーク済みタブ（opts.showTag）ではタグを付ける
     card.innerHTML =
-      '<div class="card-top">' +
-        '<span class="tag">'+cat.label+'</span>' +
+      '<div class="card-row">' +
+        '<button type="button" class="term-head" aria-expanded="false" aria-label="'+g.t+'の定義を開く">' +
+          '<span class="term-lines"><span class="term">'+g.t+'</span><span class="kana">'+g.k+'</span></span><span class="chev" aria-hidden="true">▸</span>' +
+        '</button>' +
+        (opts.showTag ? '<span class="tag">'+cat.label+'</span>' : '') +
         markBtnHtml +
       '</div>' +
-      '<div><p class="term">'+g.t+'</p><span class="kana">'+g.k+'</span></div>' +
-      '<button type="button" class="def-toggle" aria-expanded="false">定義を見る ▾</button>' +
       '<p class="def" hidden>'+g.d+relHTML(g)+sceneHTML(g)+'</p>';
 
     var markBtn = card.querySelector(".mark-btn");
@@ -2082,13 +2117,13 @@
       if(opts.onMarkChange) opts.onMarkChange(nowMarked, card);
     });
 
-    var toggleBtn = card.querySelector(".def-toggle");
+    var toggleBtn = card.querySelector(".term-head");
     var defEl = card.querySelector(".def");
     toggleBtn.addEventListener("click", function(){
       var expanded = toggleBtn.getAttribute("aria-expanded") === "true";
       toggleBtn.setAttribute("aria-expanded", String(!expanded));
+      toggleBtn.setAttribute("aria-label", g.t + (expanded ? "の定義を開く" : "の定義を閉じる"));
       defEl.hidden = expanded;
-      toggleBtn.textContent = expanded ? "定義を見る ▾" : "定義を隠す ▴";
     });
 
     return card;
@@ -2096,6 +2131,8 @@
 
   /* ---------- glossary ---------- */
   var activeCats = new Set(Object.keys(CATS));
+  // 用語集で開いているカテゴリ（閲覧者のブラウザにだけ保存する表示上の設定）
+  var openCats = new Set((safeGet("mtq_open_cats") || []).filter(function(c){ return CATS[c]; }));
   var catFilterEl = document.getElementById("catFilter");
   var quizCatFilterEl = document.getElementById("quizCatFilter");
   var quizActiveCats = new Set(Object.keys(CATS));
@@ -2152,14 +2189,83 @@
       if(!q) return true;
       return g.t.toLowerCase().indexOf(q) > -1 || g.k.toLowerCase().indexOf(q) > -1 || g.d.toLowerCase().indexOf(q) > -1;
     });
-    items = sortByCategory(items);
     countEl.textContent = items.length + " / " + GLOSSARY.length + " 語";
     gridEl.innerHTML = "";
     emptyEl.hidden = items.length !== 0;
-    items.forEach(function(g){
-      gridEl.appendChild(createCard(g));
+    var byCat = {};
+    items.forEach(function(g){ (byCat[g.c] = byCat[g.c] || []).push(g); });
+    CAT_ORDER.forEach(function(c){
+      if(byCat[c]) gridEl.appendChild(createCatGroup(c, byCat[c], q));
     });
   }
+
+  // カテゴリの見出しと、その下に並ぶ用語カード。505語のカードを一度に作ると画面が長く重くなるため、
+  // 見出しを開いたときに初めてカードを作る。検索中は該当する用語があるカテゴリをすべて開いて表示し、
+  // 開閉状態（openCats）は検索していないときの操作だけを保存する。
+  function createCatGroup(c, list, q){
+    var cat = CATS[c];
+    var all = GLOSSARY.filter(function(g){ return g.c === c; });
+    var judged = all.filter(function(g){ return !!g.j; }).length;
+    var section = document.createElement("section");
+    section.className = "cat-group";
+    section.style.setProperty("--h", cat.hue);
+    var head = document.createElement("button");
+    head.type = "button";
+    head.className = "cat-head";
+    head.innerHTML =
+      '<span class="cat-name">' + cat.label + '</span>' +
+      '<span class="cat-meta">' + (q ? list.length + "件ヒット" : all.length + "語・実務判断 " + judged) + '</span>' +
+      '<span class="chev" aria-hidden="true">▸</span>';
+    var body = document.createElement("div");
+    body.className = "grid cat-body";
+    var filled = false;
+    function setOpen(open){
+      head.setAttribute("aria-expanded", String(open));
+      body.hidden = !open;
+      if(open && !filled){
+        list.forEach(function(g){ body.appendChild(createCard(g)); });
+        filled = true;
+      }
+    }
+    head.addEventListener("click", function(){
+      var open = head.getAttribute("aria-expanded") !== "true";
+      setOpen(open);
+      if(!q){
+        if(open) openCats.add(c); else openCats.delete(c);
+        safeSet("mtq_open_cats", Array.from(openCats));
+      }
+    });
+    setOpen(q ? true : openCats.has(c));
+    section.appendChild(head);
+    section.appendChild(body);
+    return section;
+  }
+
+  function setAllGroups(open){
+    if(searchEl.value.trim()){
+      Array.prototype.forEach.call(gridEl.querySelectorAll(".cat-head"), function(h){
+        if((h.getAttribute("aria-expanded") === "true") !== open) h.click();
+      });
+      return;
+    }
+    openCats = new Set(open ? CAT_ORDER : []);
+    safeSet("mtq_open_cats", Array.from(openCats));
+    renderGlossary();
+  }
+  document.getElementById("openAllGroups").addEventListener("click", function(){ setAllGroups(true); });
+  document.getElementById("closeAllGroups").addEventListener("click", function(){ setAllGroups(false); });
+
+  // 実務シーン（s）・実務判断（j）の登録状況
+  (function(){
+    var n = GLOSSARY.length;
+    var withScene = GLOSSARY.filter(function(g){ return !!g.s; }).length;
+    var withJudge = GLOSSARY.filter(function(g){ return !!g.j; }).length;
+    document.getElementById("coverage").textContent =
+      "実務シーン " + withScene + "/" + n + "語・実務判断 " + withJudge + "/" + n + "語";
+  })();
+  var refsTitleEl = document.getElementById("refsTitle");
+  refsTitleEl.textContent = "参考文献（" + document.querySelectorAll(".refs li").length + "件）";
+
   searchEl.addEventListener("input", renderGlossary);
   renderGlossary();
 
@@ -2175,6 +2281,7 @@
     markedEmptyEl.hidden = items.length !== 0;
     items.forEach(function(g){
       markedGridEl.appendChild(createCard(g, {
+        showTag: true,
         onMarkChange: function(nowMarked, cardEl){
           if(!nowMarked){
             cardEl.remove();
