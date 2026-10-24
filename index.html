@@ -432,6 +432,17 @@
   .quiz-setup{max-width:560px;}
   .field-label{font-size:.8rem;font-weight:700;color:var(--ink-muted);margin:0 0 8px;font-family:var(--font-display);}
   .setup-block{margin-bottom:22px;}
+  /* 出題カテゴリ：閉じた状態は選択内容の要約1行。タップでカテゴリのボタンを開く */
+  .quiz-cats{border:1px solid var(--border);border-radius:4px;background:var(--surface-alt);}
+  .quiz-cats-summary{
+    display:flex;align-items:center;gap:10px;
+    padding:10px 12px;cursor:pointer;list-style:none;
+  }
+  .quiz-cats-summary::-webkit-details-marker{display:none;}
+  .quiz-cats-summary .field-label{margin:0;flex-shrink:0;}
+  .quiz-cats-value{flex:1;min-width:0;font-size:.84rem;color:var(--ink);font-variant-numeric:tabular-nums;}
+  .quiz-cats[open] > .quiz-cats-summary > .chev{transform:rotate(90deg);}
+  .quiz-cats-body{display:flex;flex-direction:column;gap:12px;padding:2px 12px 14px;}
   .row2{display:flex;gap:14px;flex-wrap:wrap;}
   .row2 > div{flex:1;min-width:160px;}
   .stat-line{
@@ -1543,10 +1554,21 @@
     <div id="quizSetup">
       <div class="stat-line" id="cumulativeStat"></div>
       <div class="quiz-setup">
-        <div class="setup-block">
-          <p class="field-label">出題カテゴリ</p>
-          <div class="chiprow" id="quizCatFilter"></div>
-        </div>
+        <details class="setup-block quiz-cats" id="quizCats">
+          <summary class="quiz-cats-summary">
+            <span class="field-label">出題カテゴリ</span>
+            <span class="quiz-cats-value" id="quizCatsValue"></span>
+            <span class="chev" aria-hidden="true">▸</span>
+          </summary>
+          <div class="quiz-cats-body">
+            <div class="cat-actions">
+              <button type="button" class="btn-link" id="quizSelectAllCats">すべて選択</button>
+              <span class="sep">/</span>
+              <button type="button" class="btn-link" id="quizDeselectAllCats">すべて解除</button>
+            </div>
+            <div class="chiprow" id="quizCatFilter" role="group" aria-label="出題カテゴリ"></div>
+          </div>
+        </details>
         <div class="row2 setup-block">
           <div>
             <p class="field-label">出題数</p>
@@ -2202,7 +2224,26 @@
   catFilterEl.addEventListener("scroll", updateCatFilterEdge, {passive:true});
   window.addEventListener("resize", updateCatFilterEdge);
   updateCatFilterEdge();
-  buildCatChips(quizCatFilterEl, quizActiveCats, function(){});
+  // 出題カテゴリは、閉じた状態でも何が選ばれているか分かるよう、選択内容を要約して表示する
+  function updateQuizCatsSummary(){
+    var keys = CAT_ORDER.filter(function(k){ return quizActiveCats.has(k); });
+    var n = GLOSSARY.filter(function(g){ return quizActiveCats.has(g.c); }).length;
+    var text;
+    if(keys.length === 0) text = "未選択";
+    else if(keys.length === CAT_ORDER.length) text = "すべて（" + keys.length + "カテゴリ・" + n + "語）";
+    else if(keys.length <= 2) text = keys.map(function(k){ return CATS[k].label; }).join("、") + "（" + n + "語）";
+    else text = keys.length + "カテゴリ（" + n + "語）";
+    document.getElementById("quizCatsValue").textContent = text;
+  }
+  function setAllQuizCats(on){
+    CAT_ORDER.forEach(function(k){ if(on) quizActiveCats.add(k); else quizActiveCats.delete(k); });
+    quizCatFilterEl.querySelectorAll(".catchip").forEach(function(btn){ btn.setAttribute("aria-pressed", String(on)); });
+    updateQuizCatsSummary();
+  }
+  buildCatChips(quizCatFilterEl, quizActiveCats, updateQuizCatsSummary);
+  document.getElementById("quizSelectAllCats").addEventListener("click", function(){ setAllQuizCats(true); });
+  document.getElementById("quizDeselectAllCats").addEventListener("click", function(){ setAllQuizCats(false); });
+  updateQuizCatsSummary();
 
   document.getElementById("selectAllCats").addEventListener("click", function(){
     Object.keys(CATS).forEach(function(key){ activeCats.add(key); });
@@ -2912,6 +2953,7 @@
   document.getElementById("startBtn").addEventListener("click", function(){
     if(quizActiveCats.size === 0){
       setupWarn.textContent = "少なくとも1つのカテゴリを選択してください。";
+      document.getElementById("quizCats").open = true;
       return;
     }
     setupWarn.textContent = "";
