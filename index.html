@@ -569,6 +569,21 @@
   @media (max-width:520px){
     .panel{padding:18px;}
     .count{margin-left:0;}
+    /* 用語集のカテゴリ絞り込みは、スマートフォン幅では折り返さず横スクロールの1行にする。
+       パネルの端まで広げ、右端を薄くして続きがあることを示す */
+    #catFilter{
+      flex-wrap:nowrap;
+      overflow-x:auto;
+      margin:0 -18px;
+      padding:2px 18px 6px;
+      scrollbar-width:none;
+      -webkit-overflow-scrolling:touch;
+      -webkit-mask-image:linear-gradient(to right,#000 85%,transparent);
+      mask-image:linear-gradient(to right,#000 85%,transparent);
+    }
+    #catFilter.at-end{-webkit-mask-image:none;mask-image:none;}
+    #catFilter::-webkit-scrollbar{display:none;}
+    #catFilter .catchip{flex-shrink:0;white-space:nowrap;}
   }
 </style>
 
@@ -2164,6 +2179,13 @@
     });
   }
   buildCatChips(catFilterEl, activeCats, renderGlossary);
+  // 横スクロール表示（スマートフォン幅）で右端まで来たら、続きを示す右端のぼかしを外す
+  function updateCatFilterEdge(){
+    catFilterEl.classList.toggle("at-end", catFilterEl.scrollLeft + catFilterEl.clientWidth >= catFilterEl.scrollWidth - 2);
+  }
+  catFilterEl.addEventListener("scroll", updateCatFilterEdge, {passive:true});
+  window.addEventListener("resize", updateCatFilterEdge);
+  updateCatFilterEdge();
   buildCatChips(quizCatFilterEl, quizActiveCats, function(){});
 
   document.getElementById("selectAllCats").addEventListener("click", function(){
