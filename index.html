@@ -231,6 +231,18 @@
     border-radius:4px;
   }
   input[type="search"]{flex:1;min-width:180px;}
+  /* 検索欄の消去ボタン。iOSのSafariでは標準の消去ボタンが出ないことがあるため自前で付け、
+     標準のボタンは二重に出ないよう隠す */
+  .search-box{position:relative;flex:1;min-width:180px;display:flex;}
+  .search-box input[type="search"]{width:100%;min-width:0;padding-right:36px;}
+  .search-box input[type="search"]::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none;display:none;}
+  .search-clear{
+    position:absolute;right:4px;top:50%;transform:translateY(-50%);
+    width:28px;height:28px;border:none;border-radius:50%;
+    background:none;color:var(--ink-muted);
+    font-size:1.1rem;line-height:28px;cursor:pointer;padding:0;
+  }
+  .search-clear:hover{color:var(--ink);background:var(--surface);}
   .count{
     font-family:var(--font-mono);
     font-size:.78rem;
@@ -621,7 +633,10 @@
 
     <div class="controls">
       <div class="search-row">
-        <input type="search" id="search" placeholder="用語・定義をキーワード検索…" aria-label="用語検索">
+        <div class="search-box">
+          <input type="search" id="search" placeholder="用語・定義をキーワード検索…" aria-label="用語検索">
+          <button type="button" class="search-clear" id="searchClear" aria-label="検索語を消す" hidden>×</button>
+        </div>
         <span class="count" id="count"></span>
       </div>
       <p class="coverage" id="coverage"></p>
@@ -2213,6 +2228,7 @@
       return g.t.toLowerCase().indexOf(q) > -1 || g.k.toLowerCase().indexOf(q) > -1 || g.d.toLowerCase().indexOf(q) > -1;
     });
     countEl.textContent = items.length + " / " + GLOSSARY.length + " 語";
+    document.getElementById("searchClear").hidden = !searchEl.value;
     gridEl.innerHTML = "";
     emptyEl.hidden = items.length !== 0;
     var byCat = {};
@@ -2289,6 +2305,20 @@
   var refsTitleEl = document.getElementById("refsTitle");
   refsTitleEl.textContent = "参考文献（" + document.querySelectorAll(".refs li").length + "件）";
 
+  // 検索語の消去：入力があるときだけ×ボタンを出し、×ボタンかEscキーで消して一覧を元に戻す
+  var searchClearEl = document.getElementById("searchClear");
+  function clearSearch(){
+    searchEl.value = "";
+    renderGlossary();
+    searchEl.focus();
+  }
+  searchClearEl.addEventListener("click", clearSearch);
+  searchEl.addEventListener("keydown", function(e){
+    if(e.key === "Escape" && searchEl.value){
+      e.preventDefault();
+      clearSearch();
+    }
+  });
   searchEl.addEventListener("input", renderGlossary);
   renderGlossary();
 
