@@ -281,12 +281,7 @@
     display:flex;flex-direction:column;gap:8px;
   }
   .card-row{display:flex;align-items:center;gap:10px;}
-  .term-head{
-    flex:1;min-width:0;
-    display:flex;align-items:center;gap:8px;
-    background:none;border:none;padding:2px 0;margin:0;
-    font:inherit;color:inherit;text-align:left;cursor:pointer;
-  }
+  .term-head{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:2px 0;}
   .term-lines{flex:1;min-width:0;display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 8px;}
   .term-head .term{font-size:.98rem;}
   .term-head .kana{display:inline;margin-top:0;}
@@ -2166,17 +2161,18 @@
     var marked = markedSet.has(g.id);
     var markBtnHtml = '<button type="button" class="mark-btn" data-id="'+g.id+'" aria-pressed="'+marked+'" aria-label="'+g.t+'をマークする">'+(marked ? '★' : '☆')+'</button>';
 
-    // 閉じた状態は「用語名＋読み」の1行。用語集ではカテゴリの見出しの下に並ぶためタグを省き、
-    // カテゴリ混在で並ぶマーク済みタブ（opts.showTag）ではタグを付ける
+    // 1行目に「用語名＋読み」、その下に定義・対義語・関連語・実務シーンを常に表示する
+    //（開閉はカテゴリの見出しだけで行い、用語ごとに開く手間をなくす）。用語集ではカテゴリの
+    // 見出しの下に並ぶためタグを省き、カテゴリ混在で並ぶマーク済みタブ（opts.showTag）ではタグを付ける
     card.innerHTML =
       '<div class="card-row">' +
-        '<button type="button" class="term-head" aria-expanded="false" aria-label="'+g.t+'の定義を開く">' +
-          '<span class="term-lines"><span class="term">'+g.t+'</span><span class="kana">'+g.k+'</span></span><span class="chev" aria-hidden="true">▸</span>' +
-        '</button>' +
+        '<div class="term-head">' +
+          '<span class="term-lines"><span class="term">'+g.t+'</span><span class="kana">'+g.k+'</span></span>' +
+        '</div>' +
         (opts.showTag ? '<span class="tag">'+cat.label+'</span>' : '') +
         markBtnHtml +
       '</div>' +
-      '<p class="def" hidden>'+g.d+relHTML(g)+sceneHTML(g)+'</p>';
+      '<p class="def">'+g.d+relHTML(g)+sceneHTML(g)+'</p>';
 
     var markBtn = card.querySelector(".mark-btn");
     markBtn.addEventListener("click", function(){
@@ -2184,15 +2180,6 @@
       markBtn.setAttribute("aria-pressed", nowMarked);
       markBtn.textContent = nowMarked ? "★" : "☆";
       if(opts.onMarkChange) opts.onMarkChange(nowMarked, card);
-    });
-
-    var toggleBtn = card.querySelector(".term-head");
-    var defEl = card.querySelector(".def");
-    toggleBtn.addEventListener("click", function(){
-      var expanded = toggleBtn.getAttribute("aria-expanded") === "true";
-      toggleBtn.setAttribute("aria-expanded", String(!expanded));
-      toggleBtn.setAttribute("aria-label", g.t + (expanded ? "の定義を開く" : "の定義を閉じる"));
-      defEl.hidden = expanded;
     });
 
     return card;
