@@ -432,16 +432,17 @@
   .quiz-setup{max-width:560px;}
   .field-label{font-size:.8rem;font-weight:700;color:var(--ink-muted);margin:0 0 8px;font-family:var(--font-display);}
   .setup-block{margin-bottom:22px;}
-  /* 出題カテゴリ：閉じた状態は選択内容の要約1行。タップでカテゴリのボタンを開く */
+  /* 出題カテゴリ：閉じた状態は選択内容の要約1行で、出題数・出題形式のプルダウンと同じ見た目にそろえる。
+     タップでカテゴリのボタンを開く（複数選択のため、ネイティブのselectではなくdetailsで作っている） */
   .quiz-cats{border:1px solid var(--border);border-radius:4px;background:var(--surface-alt);}
   .quiz-cats-summary{
     display:flex;align-items:center;gap:10px;
-    padding:10px 12px;cursor:pointer;list-style:none;
+    padding:9px 12px;cursor:pointer;list-style:none;
+    font-family:var(--font-mono);font-size:.88rem;color:var(--ink);
   }
   .quiz-cats-summary::-webkit-details-marker{display:none;}
-  .quiz-cats-summary .field-label{margin:0;flex-shrink:0;}
-  .quiz-cats-value{flex:1;min-width:0;font-size:.84rem;color:var(--ink);font-variant-numeric:tabular-nums;}
-  .quiz-cats[open] > .quiz-cats-summary > .chev{transform:rotate(90deg);}
+  .quiz-cats-value{flex:1;min-width:0;font-variant-numeric:tabular-nums;}
+  .quiz-cats[open] > .quiz-cats-summary > .chev{transform:rotate(180deg);}
   .quiz-cats-body{display:flex;flex-direction:column;gap:12px;padding:2px 12px 14px;}
   .row2{display:flex;gap:14px;flex-wrap:wrap;}
   .row2 > div{flex:1;min-width:160px;}
@@ -1554,11 +1555,12 @@
     <div id="quizSetup">
       <div class="stat-line" id="cumulativeStat"></div>
       <div class="quiz-setup">
-        <details class="setup-block quiz-cats" id="quizCats">
-          <summary class="quiz-cats-summary">
-            <span class="field-label">出題カテゴリ</span>
+        <div class="setup-block">
+        <p class="field-label" id="quizCatsLabel">出題カテゴリ</p>
+        <details class="quiz-cats" id="quizCats">
+          <summary class="quiz-cats-summary" aria-labelledby="quizCatsLabel quizCatsValue">
             <span class="quiz-cats-value" id="quizCatsValue"></span>
-            <span class="chev" aria-hidden="true">▸</span>
+            <span class="chev" aria-hidden="true">▾</span>
           </summary>
           <div class="quiz-cats-body">
             <div class="cat-actions">
@@ -1569,6 +1571,7 @@
             <div class="chiprow" id="quizCatFilter" role="group" aria-label="出題カテゴリ"></div>
           </div>
         </details>
+        </div>
         <div class="row2 setup-block">
           <div>
             <p class="field-label">出題数</p>
