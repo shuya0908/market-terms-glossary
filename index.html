@@ -506,15 +506,15 @@
   .quiz-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;}
 
   .q-def-blank{font-size:1.02rem;line-height:1.9;margin:14px 0 0;font-family:var(--font-body);color:var(--ink);}
+  /* 空欄は区切りのない1本の下線で、答えの長さに関係なく同じ幅にする
+    （「＿＿＿＿」のように下線文字を並べると、文字数ぶんの枠に見えてしまうため） */
   .blank{
     display:inline-block;
-    min-width:2.4em;
-    padding:0 4px;
+    width:5em;
+    height:1.2em;
+    vertical-align:-.2em;
+    margin:0 2px;
     border-bottom:2px solid var(--accent);
-    color:var(--accent);
-    font-weight:700;
-    letter-spacing:.08em;
-    font-family:var(--font-mono);
   }
   .fillblank-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;}
   .fillblank-input{
@@ -2802,8 +2802,9 @@
     return def.indexOf(word);
   }
 
-  // 空欄は答えの文字数が分からないよう常に同じ幅で表示し、文字数は「ヒント」ボタンを押したときだけ示す
-  var BLANK_PLACEHOLDER = "＿＿＿＿";
+  // 空欄は答えの文字数が分からないよう中身を空にし、CSS（.blank）で常に同じ幅の下線として表示する。
+  // 文字数は「ヒント」ボタンを押したときだけ示す
+  var BLANK_PLACEHOLDER = "";
   function maskDefinition(def, word, dict){
     var idx = findBlankIndex(def, word, dict);
     if(idx < 0) return null;
