@@ -2637,7 +2637,10 @@
     if(m){
       var head = m[1].trim();
       if(head) out.push(head);
-      m[2].split(/[\/／、,]/).forEach(function(s){ s = s.trim(); if(s) out.push(s); });
+      // 別名は「／」「、」で区切るほか、「・」でも区切る。ただし前後がともにカタカナの「・」
+      //（「イン・ザ・マネー」のような語の中の中黒）は区切らない。「Record Date・基準日」
+      //「条件付きVaR・CVaR」のように別名を「・」で並べた見出しを、別々の語として扱うため
+      m[2].split(/[\/／、,]|(?<![ァ-ヶー])・|・(?![ァ-ヶー])/).forEach(function(s){ s = s.trim(); if(s) out.push(s); });
     } else {
       var whole = t.trim();
       if(whole) out.push(whole);
