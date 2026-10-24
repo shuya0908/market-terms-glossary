@@ -1656,7 +1656,6 @@
       <span class="changelog-filter-label"></span>
       <button type="button" id="changelogFilterClear">すべて表示に戻す</button>
     </div>
-    <div class="empty" id="changelogHint" hidden>カレンダーの日付（色の付いた日）を選ぶと、その日の修正・追加・削除の一覧が表示されます。</div>
     <div class="changelog-list" id="changelogList"></div>
     <div class="empty" id="changelogEmpty" hidden>まだ修正履歴はありません。</div>
   </div>
@@ -1850,7 +1849,6 @@
   var changelogCalGridEl = document.getElementById("changelogCalGrid");
   var changelogCalTitleEl = document.getElementById("changelogCalTitle");
   var changelogFilterBarEl = document.getElementById("changelogFilterBar");
-  var changelogHintEl = document.getElementById("changelogHint");
   var changelogRendered = false;
   var changelogViewInited = false;
   var changelogViewYear, changelogViewMonth; // month is 0-indexed
@@ -1943,10 +1941,8 @@
     if(!changelogSelectedDate){
       changelogFilterBarEl.hidden = true;
       changelogEmptyEl.hidden = changelogEntries.length > 0;
-      changelogHintEl.hidden = changelogEntries.length === 0;
       return;
     }
-    changelogHintEl.hidden = true;
     changelogEmptyEl.hidden = true;
     var source = changelogEntries.filter(function(entry){ return entry.date === changelogSelectedDate; });
     changelogFilterBarEl.hidden = false;
