@@ -1799,7 +1799,7 @@
     track.innerHTML = html + html;
     var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if(reduceMotion) return;
-    var SPEED = 150; // 1秒あたりの移動量（px）
+    var SPEED = 80; // 1秒あたりの移動量（px）
     var paused = false, last = null, pos = 0;
     ticker.addEventListener("mouseenter", function(){ paused = true; });
     ticker.addEventListener("mouseleave", function(){ paused = false; });
