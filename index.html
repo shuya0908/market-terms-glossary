@@ -2938,7 +2938,7 @@
       }
       if(type === "scenario" || type === "term2scene"){
         var sceneOptions = shuffle([g].concat(pickConfusers(g, 3, type === "term2scene", wordsOf, blankFreq)));
-        return {term:g, type:type, prompt:type === "scenario" ? g.s : g.t, correctTerm:g, options:sceneOptions};
+        return {term:g, type:type, prompt:type === "scenario" ? g.s : shortName(g.t), correctTerm:g, options:sceneOptions};
       }
       var samePool = GLOSSARY.filter(function(x){ return x.c === g.c && x.id !== g.id; });
       var otherPool = GLOSSARY.filter(function(x){ return x.id !== g.id; });
@@ -2948,7 +2948,7 @@
       if(type === "def2term"){
         return {term:g, type:type, prompt:g.d, correctTerm:g, options:optionTerms};
       } else {
-        return {term:g, type:type, prompt:g.t, correctTerm:g, options:optionTerms};
+        return {term:g, type:type, prompt:shortName(g.t), correctTerm:g, options:optionTerms};
       }
     });
   }
@@ -3030,7 +3030,7 @@
         promptEl.textContent = q.term.d;
         promptEl.className = "q-prompt";
       } else {
-        promptEl.textContent = q.term.t;
+        promptEl.textContent = shortName(q.term.t);
         promptEl.className = "q-prompt is-term";
       }
       defBlankEl.innerHTML = q.masked.before + '<span class="blank">'+q.masked.blank+'</span>' + q.masked.after;
@@ -3071,7 +3071,9 @@
             mainText = optTerm.s;
             explainText = "この場面の用語：" + optTerm.t;
           } else {
-            mainText = chooseTerm ? optTerm.t : optTerm.d;
+            // 見出しの括弧書き（別名・正式名称）は、定義や場面の手がかりになって答えが分かってしまうため
+            // 解答前は括弧の前の部分だけを出し、解答後に onAnswer で括弧付きの見出しに戻す
+            mainText = chooseTerm ? shortName(optTerm.t) : optTerm.d;
             explainText = chooseTerm ? optTerm.d : ("用語：" + optTerm.t);
           }
           // 実務シーンの問題では、誤答の用語が当てはまる場面も解答後に示し、正解との違いを見比べられるようにする
@@ -3082,6 +3084,7 @@
           btn.className = "opt";
           btn.type = "button";
           btn.setAttribute("data-correct", optTerm.id === q.correctTerm.id ? "1" : "0");
+          if(chooseTerm) btn.setAttribute("data-full", optTerm.t);
           btn.innerHTML =
             '<span class="opt-main">'+mainText+'</span>' +
             '<span class="opt-explain" hidden>'+explainText+'</span>';
@@ -3144,6 +3147,7 @@
       b.disabled = true;
       var explainEl = b.querySelector(".opt-explain");
       if(explainEl) explainEl.hidden = false;
+      if(b.hasAttribute("data-full")) b.querySelector(".opt-main").textContent = b.getAttribute("data-full");
       if(b.getAttribute("data-correct") === "1") b.classList.add("correct");
       else if(b === btn) b.classList.add("wrong");
     });
