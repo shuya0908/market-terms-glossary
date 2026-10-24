@@ -2637,10 +2637,9 @@
     if(m){
       var head = m[1].trim();
       if(head) out.push(head);
-      // 別名は「／」「、」で区切るほか、「・」でも区切る。ただし前後がともにカタカナの「・」
-      //（「イン・ザ・マネー」のような語の中の中黒）は区切らない。「Record Date・基準日」
-      //「条件付きVaR・CVaR」のように別名を「・」で並べた見出しを、別々の語として扱うため
-      m[2].split(/[\/／、,]|(?<![ァ-ヶー])・|・(?![ァ-ヶー])/).forEach(function(s){ s = s.trim(); if(s) out.push(s); });
+      // 括弧内の別名は読点「、」で区切る。中黒「・」（イン・ザ・マネー）や「/」（バーゼルI/II/III）は
+      // 語の中の記号なので区切らない
+      m[2].split(/[、,]/).forEach(function(s){ s = s.trim(); if(s) out.push(s); });
     } else {
       var whole = t.trim();
       if(whole) out.push(whole);
@@ -2760,8 +2759,10 @@
   // ローマ数字だけの断片（「バーゼルI/II/III」の「II」等）は単独では
   // 答えを特定できないため候補から除外する。
   function pickTermWord(term){
+    // 「バーゼルI/II/III」のように記号を含む表記は入力しにくいため、空欄の正解には選ばない
+    //（答えとして入力された場合は isBlankAnswerCorrect() で正解として扱う）
     var parts = extractCoreTermWords(term.t).filter(function(w){
-      return w.length >= 2 && !/^[ivxlcdm]+$/i.test(w);
+      return w.length >= 2 && !/^[ivxlcdm]+$/i.test(w) && !/[\/／]/.test(w);
     });
     if(parts.length === 0) return null;
     return parts[Math.floor(Math.random() * parts.length)];

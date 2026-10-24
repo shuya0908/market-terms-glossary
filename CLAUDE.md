@@ -58,12 +58,12 @@ node -e 'require("./terms.json").forEach(x=>{const n=[...x.d].length;if(n>120)co
 
 `terms.json` の各用語の説明文（`d` フィールド）には、**その用語自身の見出し語・別名を、その用語を指す語として登場させないこと**。説明文を読めば答えが分かってしまい、用語集としても穴埋め・用語当てクイズとしても成り立たなくなるため。用語を追加する場合も、既存用語の `d` を修正する場合も守ること。
 
-見出し語 `t` の「カッコの前の部分」と「カッコ内の別名（`・` `/` `、` で区切った各部分）」が説明文に出てくる場合を、次のA〜Cの3パターンに分けて判断する。
+見出し語 `t` の「カッコの前の部分」と「カッコ内の別名（`、` で区切った各部分）」が説明文に出てくる場合を、次のA〜Cの3パターンに分けて判断する。
 
 - **A（禁止）**：見出し語・別名そのものが、その用語自身を指して説明文に登場する。
   - 例：EADの説明文中の「EAD＝α×（RC＋PFE）」、国債の説明文中の「日本の国債はJGBと呼ばれ」、FRA（金利先渡取引）の説明文中の「（FRAレート）」「〜を授受する金利先渡取引のこと」、ΔNIIの説明文中の「ΔNIIは〜」、TARFの説明文中の「目標（ターゲット）」。
   - 直し方：該当箇所を削除するか、「こちらは」「日本のものは」「ATMで組む場合の」のように、見出し語を使わない表現に言い換える。
-  - **略語の正式名称・別名は、説明文ではなく見出しの括弧書きに入れる。** 実務で略語の呼び名が一般的な用語は、略語を括弧の前に置く（例：「OIS（Overnight Index Swap、翌日物金利スワップ）」「CET1（普通株式等Tier1）」。クイズでは括弧の前だけが表示されるため）。括弧内に別名を複数並べる場合は「、」か「・」で区切る（`index.html` の `extractCoreTermWords()` は、前後がともにカタカナの「・」以外を別名の区切りとして扱い、穴埋めではどの別名で答えても正解にする）。 「FOK」の説明文に「（Fill or Kill）」、「O/N」の説明文に「「Overnight」の略で」、「当初証拠金」の説明文に「（英語ではInitial Margin）」、「歩み値」の説明文に「ティックデータとも呼ばれる」と書くと、定義から用語を選ぶクイズで答えが分かってしまう。「FOK（Fill or Kill）」「O/N（Overnight）」「当初証拠金（Initial Margin）」「歩み値（ティックデータ）」のように見出しに移し、説明文からは削除する。見出しを変えた場合は、他の用語の `ant` / `rel` の表記も直す（後述）。なお、クイズでは見出しの括弧書きを解答前には表示せず（`index.html` の `shortName()` で括弧の前の部分だけを出す）、解答後に括弧付きの見出しに戻す。
+  - **略語の正式名称・別名は、説明文ではなく見出しの括弧書きに入れる。** 実務で略語の呼び名が一般的な用語は、略語を括弧の前に置く（例：「OIS（Overnight Index Swap、翌日物金利スワップ）」「CET1（普通株式等Tier1）」。クイズでは括弧の前だけが表示されるため）。**括弧内に別名を複数並べる場合は読点「、」で区切る**（例：「権利確定日（Record Date、基準日）」）。中黒「・」は「イン・ザ・マネー」のような語の中の区切りにだけ使い、別名の区切りには使わない（`index.html` の `extractCoreTermWords()` は読点だけを別名の区切りとして扱い、穴埋めではどの別名で答えても正解にする。中黒や「/」で並べると1つの語として扱われ、片方の別名で答えると不正解になる）。 「FOK」の説明文に「（Fill or Kill）」、「O/N」の説明文に「「Overnight」の略で」、「当初証拠金」の説明文に「（英語ではInitial Margin）」、「歩み値」の説明文に「ティックデータとも呼ばれる」と書くと、定義から用語を選ぶクイズで答えが分かってしまう。「FOK（Fill or Kill）」「O/N（Overnight）」「当初証拠金（Initial Margin）」「歩み値（ティックデータ）」のように見出しに移し、説明文からは削除する。見出しを変えた場合は、他の用語の `ant` / `rel` の表記も直す（後述）。なお、クイズでは見出しの括弧書きを解答前には表示せず（`index.html` の `shortName()` で括弧の前の部分だけを出す）、解答後に括弧付きの見出しに戻す。
 - **B（許容）**：見出し語が、別の概念を表す複合語の一部として登場する。
   - 例：トランシェの説明文中の「シニアトランシェ」、権利行使の説明文中の「権利行使価格」、流動性リスクの説明文中の「市場流動性リスク」、OISの説明文中の「OISディスカウント」。
   - 別の用語名として定着していて、言い換えると不自然になるため許容する。
@@ -74,7 +74,7 @@ node -e 'require("./terms.json").forEach(x=>{const n=[...x.d].length;if(n>120)co
 AからCのどれに当たるかは機械的には判定できない。次のコマンドで見出し語・別名が説明文に含まれる用語を一覧し、出力された各用語について目視で判断すること（B・Cに当たる用語も出力される）。
 
 ```sh
-node -e 'require("./terms.json").forEach(x=>{const m=x.t.match(/^([^（(]+)[（(]([^）)]+)[）)]/);const ws=(m?[m[1].trim(),...m[2].split(/[・\/、,]/)]:[x.t]).map(s=>s.trim()).filter(w=>w.length>=2&&x.d.includes(w));if(ws.length)console.log(x.t,"=>",ws.join(","))})'
+node -e 'require("./terms.json").forEach(x=>{const m=x.t.match(/^([^（(]+)[（(]([^）)]+)[）)]/);const ws=(m?[m[1].trim(),...m[2].split(/[、,]/)]:[x.t]).map(s=>s.trim()).filter(w=>w.length>=2&&x.d.includes(w));if(ws.length)console.log(x.t,"=>",ws.join(","))})'
 ```
 
 Aに当たる箇所を直した場合も内容の変更にあたるため、`changelog.json` に `type: "correction"` のエントリを記録し、言い換え後の説明文について穴埋めクイズの候補語と文字数上限も確認すること。
@@ -103,7 +103,7 @@ node -e 'const bg=s=>{const a=[...s.replace(/[、。・（）()「」，,\s]/g,"
 - 文字数上限・自己参照は、次のコマンドで確認できる（何も出力されなければ問題なし）。
 
 ```sh
-node -e 'require("./terms.json").forEach(x=>{if(!x.s)return;const n=[...x.s].length;if(n>120)console.log("LONG",n,x.t);const m=x.t.match(/^([^（(]+)[（(]([^）)]+)[）)]/);const ws=(m?[m[1].trim(),...m[2].split(/[・\/、,]/)]:[x.t]).map(s=>s.trim()).filter(w=>w&&x.s.includes(w));if(ws.length)console.log("SELF",x.t,"=>",ws.join(","))})'
+node -e 'require("./terms.json").forEach(x=>{if(!x.s)return;const n=[...x.s].length;if(n>120)console.log("LONG",n,x.t);const m=x.t.match(/^([^（(]+)[（(]([^）)]+)[）)]/);const ws=(m?[m[1].trim(),...m[2].split(/[、,]/)]:[x.t]).map(s=>s.trim()).filter(w=>w&&x.s.includes(w));if(ws.length)console.log("SELF",x.t,"=>",ws.join(","))})'
 ```
 
 ## 実務判断（`j` フィールド）の書き方（重要）
