@@ -136,15 +136,10 @@
     white-space:nowrap;
     margin-top:28px;
   }
-  .ticker-track{
-    display:inline-flex;
-    animation:ticker-scroll 75s linear infinite;
-    will-change:transform;
-  }
-  .ticker:hover .ticker-track,.ticker:focus-within .ticker-track{animation-play-state:paused;}
-  @keyframes ticker-scroll{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+  /* 帯全体をCSSアニメーション（transform）で動かすと、iOSのSafariでは横に非常に長い要素の
+     描画が上限を超えて空白になることがあるため、JavaScriptで枠のスクロール位置をずらして流す */
+  .ticker-track{display:inline-flex;}
   @media (prefers-reduced-motion: reduce){
-    .ticker-track{animation:none;}
     .ticker{overflow-x:auto;}
   }
   .ticker-item{
@@ -1796,9 +1791,29 @@
   (function buildTicker(){
     var sample = GLOSSARY.slice(0, 24);
     var html = sample.map(function(g){
-      return '<span class="ticker-item"><b>'+g.t+'</b>'+g.d.slice(0,26)+'…</span>';
+      return '<span class="ticker-item"><b>'+g.t.replace(/[（(].*$/, "")+'</b>'+g.d.slice(0,26)+'…</span>';
     }).join("");
-    document.getElementById("tickerTrack").innerHTML = html + html;
+    var ticker = document.getElementById("ticker");
+    var track = document.getElementById("tickerTrack");
+    // 同じ並びを2回つなげ、前半を流し切ったら先頭に戻すことで切れ目なく流す
+    track.innerHTML = html + html;
+    var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if(reduceMotion) return;
+    var SPEED = 150; // 1秒あたりの移動量（px）
+    var paused = false, last = null, pos = 0;
+    ticker.addEventListener("mouseenter", function(){ paused = true; });
+    ticker.addEventListener("mouseleave", function(){ paused = false; });
+    function step(ts){
+      if(last !== null && !paused){
+        var half = track.scrollWidth / 2;
+        pos += SPEED * Math.min(ts - last, 100) / 1000;
+        if(half > 0 && pos >= half) pos -= half;
+        ticker.scrollLeft = pos;
+      }
+      last = ts;
+      requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
   })();
 
   /* ---------- tabs ---------- */
