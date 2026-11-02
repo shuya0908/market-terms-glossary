@@ -1,0 +1,12 @@
+# wrangler（Cloudflare のコマンドラインツール）でデプロイする場合の設定。
+# ダッシュボードから手作業でデプロイする場合は、このファイルは使わない（README.md 参照）。
+name = "market-terms-sync"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+[[kv_namespaces]]
+binding = "SYNC_KV"
+id = "ここに KV ネームスペースの ID を入れる"
+
+[vars]
+ALLOWED_ORIGINS = "https://shuya0908.github.io"

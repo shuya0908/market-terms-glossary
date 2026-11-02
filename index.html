@@ -558,6 +558,14 @@
   .backup-note{flex:1 1 260px;color:var(--ink-muted);font-size:.82rem;line-height:1.5;margin:0;}
   /* 縮まない設定（flex:0 0 auto）だと、ボタン2つを横に並べた幅のまま狭い画面（320px幅など）からはみ出すため、縮めて折り返せるようにする */
   .backup-actions{display:flex;gap:8px;flex-wrap:wrap;flex:0 1 auto;min-width:0;}
+  .sync-bar{margin-top:12px;padding:14px 16px;border:1px solid var(--border);border-radius:4px;background:var(--surface-alt);display:flex;flex-direction:column;gap:10px;}
+  .sync-bar .backup-note{flex:none;}
+  .sync-off,.sync-on{display:flex;flex-wrap:wrap;align-items:center;gap:8px;}
+  .sync-join{display:flex;gap:8px;flex:1 1 240px;min-width:0;}
+  .sync-key-input{flex:1;min-width:0;font-family:var(--font-mono);font-size:.85rem;background:var(--surface);border:1px solid var(--border);color:var(--ink);padding:7px 10px;border-radius:4px;text-transform:uppercase;}
+  .sync-status{margin:0;flex:1 1 220px;font-size:.82rem;color:var(--ink-muted);display:flex;flex-direction:column;gap:2px;}
+  .sync-key{font-family:var(--font-mono);color:var(--ink);font-weight:700;letter-spacing:.04em;}
+  .sync-status .is-error{color:var(--danger-ink);}
 
   .modal-overlay{
     position:fixed; inset:0;
@@ -1666,6 +1674,25 @@
     </div>
   </div>
 
+  <div class="sync-bar" id="syncBar" hidden>
+    <p class="backup-note" id="syncNote">同期キーを使うと、マークとクイズ成績を複数の端末で同期できます。</p>
+    <div class="sync-off" id="syncOff">
+      <button type="button" class="btn ghost small" id="syncNewBtn">同期キーを発行</button>
+      <div class="sync-join">
+        <input type="text" id="syncKeyInput" class="sync-key-input" placeholder="同期キーを入力" autocomplete="off" autocapitalize="characters" spellcheck="false">
+        <button type="button" class="btn ghost small" id="syncJoinBtn">連携する</button>
+      </div>
+    </div>
+    <div class="sync-on" id="syncOn" hidden>
+      <p class="sync-status"><span class="sync-key" id="syncKeyText"></span><span id="syncStatusText"></span></p>
+      <div class="backup-actions">
+        <button type="button" class="btn ghost small" id="syncCopyBtn">キーをコピー</button>
+        <button type="button" class="btn ghost small" id="syncNowBtn">今すぐ同期</button>
+        <button type="button" class="btn ghost small" id="syncLeaveBtn">同期を解除</button>
+      </div>
+    </div>
+  </div>
+
   <footer>市場系システムエンジニア向け学習ツール ・ 全 <span id="totalCount"></span> 語収録</footer>
 </div>
 
@@ -2087,6 +2114,7 @@
     else { markedSet.add(id); nowMarked = true; }
     safeSet("mtq_marked", Array.from(markedSet));
     updateMarkedTabCount();
+    syncNoteMarks([id], nowMarked);
     return nowMarked;
   }
   // One-directional mark (never unmarks) used to auto-mark terms the user
@@ -2096,6 +2124,7 @@
     markedSet.add(id);
     safeSet("mtq_marked", Array.from(markedSet));
     updateMarkedTabCount();
+    syncNoteMarks([id], true);
     return true;
   }
   function updateMarkedTabCount(){
@@ -2402,6 +2431,7 @@
   }
   document.getElementById("clearMarksBtn").addEventListener("click", function(){
     if(markedSet.size === 0) return;
+    syncNoteMarks(Array.from(markedSet), false);
     markedSet.clear();
     safeSet("mtq_marked", []);
     updateMarkedTabCount();
@@ -2483,6 +2513,10 @@
         await showAlert("ファイルの形式が正しくありません。");
         return;
       }
+      if(syncConfig()){
+        await showAlert("端末間の同期中はバックアップから復元できません。復元する場合は、先に「同期を解除」してください。");
+        return;
+      }
       var ok = await showConfirm("現在のマーク・クイズ成績を、このバックアップファイルの内容で上書きします。よろしいですか？", "復元する");
       if(!ok) return;
 
@@ -2499,6 +2533,171 @@
     };
     reader.readAsText(file);
   });
+
+  /* ---------- sync between devices ----------
+     同期キーを使い、マークとクイズ成績を sync-worker/（Cloudflare Workers）経由で端末間で同期する。
+     2台で同時に変更しても失われないよう、上書きではなく「合わせる」方式にしている：
+       マーク：用語ごとに [付けている=1/外した=0, 操作した時刻] を持ち、時刻の新しい方を採る（mtq_sync_marks）
+       成績  ：端末ごとの累計 [解いた数, 正解数] を持ち、表示は全端末の合計（mtq_sync_stats）
+     同期していない間は従来どおり mtq_marked / mtq_stats だけを使い、同期を始めたときに現在の内容から作る。 */
+  var SYNC_ENDPOINT = ""; // デプロイした同期サーバーのURL（例：https://market-terms-sync.xxx.workers.dev）。空なら同期機能を表示しない
+  var syncTimer = null, syncBusy = false;
+  function syncConfig(){ var c = safeGet("mtq_sync"); return c && c.key ? c : null; }
+  function formatSyncKey(k){ return k.replace(/(.{4})(?=.)/g, "$1-"); }
+  function normalizeSyncKey(v){ return String(v || "").toUpperCase().replace(/[^0-9A-Z]/g, ""); }
+  function syncDeviceId(){
+    var id = safeGet("mtq_device_id");
+    if(!id){
+      var a = new Uint8Array(8); crypto.getRandomValues(a);
+      id = Array.from(a).map(function(b){ return (b % 36).toString(36); }).join("") + Date.now().toString(36).slice(-4);
+      safeSet("mtq_device_id", id);
+    }
+    return id;
+  }
+  function syncNoteMarks(ids, on){
+    if(!syncConfig()) return;
+    var marks = safeGet("mtq_sync_marks") || {}, now = Date.now();
+    ids.forEach(function(id){ marks[id] = [on ? 1 : 0, now]; });
+    safeSet("mtq_sync_marks", marks);
+    scheduleSync();
+  }
+  function syncNoteStats(attempts, correct){
+    if(!syncConfig()) return;
+    var stats = safeGet("mtq_sync_stats") || {}, me = syncDeviceId();
+    var cur = stats[me] || [0, 0];
+    stats[me] = [cur[0] + attempts, cur[1] + correct];
+    safeSet("mtq_sync_stats", stats);
+    scheduleSync();
+  }
+  // 同期を始めるとき、この端末の現在のマーク・成績から同期用の記録を作る
+  function syncInitLocal(){
+    var marks = safeGet("mtq_sync_marks") || {}, now = Date.now();
+    markedSet.forEach(function(id){ if(!marks[id]) marks[id] = [1, now]; });
+    safeSet("mtq_sync_marks", marks);
+    var stats = safeGet("mtq_sync_stats") || {}, me = syncDeviceId();
+    if(!stats[me]){
+      var s = safeGet("mtq_stats") || {attempts:0, correct:0};
+      stats[me] = [s.attempts || 0, s.correct || 0];
+    }
+    safeSet("mtq_sync_stats", stats);
+  }
+  // サーバーで合わせた結果を、この端末のマーク・成績に反映する
+  function syncApply(state){
+    var marks = (state && state.marks) || {}, stats = (state && state.stats) || {};
+    safeSet("mtq_sync_marks", marks);
+    safeSet("mtq_sync_stats", stats);
+    markedSet = new Set(Object.keys(marks).filter(function(id){ return marks[id][0] === 1 && ID_PATTERN.test(id); }));
+    safeSet("mtq_marked", Array.from(markedSet));
+    var total = {attempts:0, correct:0};
+    Object.keys(stats).forEach(function(d){ total.attempts += stats[d][0]; total.correct += stats[d][1]; });
+    safeSet("mtq_stats", total);
+    updateMarkedTabCount();
+    syncMarkButtonsUI();
+    if(!TABS.marked.panel.hidden) renderMarked();
+    refreshCumulativeStat();
+  }
+  function syncPost(path, body){
+    return fetch(SYNC_ENDPOINT.replace(/\/$/, "") + path, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(body),
+      cache: "no-store"
+    }).then(function(res){
+      return res.json().catch(function(){ return {}; }).then(function(data){
+        if(!res.ok){ var err = new Error(data.error || ("HTTP " + res.status)); err.code = data.error; throw err; }
+        return data;
+      });
+    });
+  }
+  function scheduleSync(){
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(function(){ syncNow(); }, 1500);
+  }
+  function syncNow(){
+    var cfg = syncConfig();
+    if(!cfg || !SYNC_ENDPOINT) return Promise.resolve();
+    if(syncBusy){ scheduleSync(); return Promise.resolve(); }
+    syncBusy = true;
+    var state = {v:1, marks: safeGet("mtq_sync_marks") || {}, stats: safeGet("mtq_sync_stats") || {}};
+    return syncPost("/v1/push", {key: cfg.key, state: state}).then(function(rec){
+      syncApply(rec.state);
+      cfg.lastSyncAt = Date.now(); cfg.lastError = "";
+      safeSet("mtq_sync", cfg);
+    }).catch(function(err){
+      cfg.lastError = err.code === "unknown_key" ? "この同期キーはサーバーに見つかりません" : "同期できませんでした（通信を確認してください）";
+      safeSet("mtq_sync", cfg);
+    }).then(function(){
+      syncBusy = false;
+      renderSyncUI();
+    });
+  }
+  function renderSyncUI(){
+    var bar = document.getElementById("syncBar");
+    bar.hidden = !SYNC_ENDPOINT;
+    if(!SYNC_ENDPOINT) return;
+    var cfg = syncConfig();
+    document.getElementById("syncOff").hidden = !!cfg;
+    document.getElementById("syncOn").hidden = !cfg;
+    document.getElementById("syncNote").textContent = cfg
+      ? "この端末は同期中です。別の端末で同じ同期キーを入力すると、マークとクイズ成績が同期されます。"
+      : "同期キーを使うと、マークとクイズ成績を複数の端末で同期できます。";
+    if(!cfg) return;
+    document.getElementById("syncKeyText").textContent = "同期キー：" + formatSyncKey(cfg.key);
+    var st = document.getElementById("syncStatusText");
+    if(cfg.lastError){
+      st.className = "is-error"; st.textContent = cfg.lastError;
+    } else if(cfg.lastSyncAt){
+      var d = new Date(cfg.lastSyncAt);
+      st.className = ""; st.textContent = "最終同期：" + (d.getMonth()+1) + "/" + d.getDate() + " " + pad2(d.getHours()) + ":" + pad2(d.getMinutes());
+    } else {
+      st.className = ""; st.textContent = "同期中…";
+    }
+  }
+  function syncStart(key){
+    safeSet("mtq_sync", {key: key, lastSyncAt: 0, lastError: ""});
+    syncInitLocal();
+    renderSyncUI();
+    return syncNow();
+  }
+  document.getElementById("syncNewBtn").addEventListener("click", async function(){
+    try{
+      var data = await syncPost("/v1/new", {});
+      await syncStart(data.key);
+      await showAlert("同期キーを発行しました。\n" + formatSyncKey(data.key) + "\n\n別の端末でこのキーを入力すると同期されます。キーを知っている人はデータを読み書きできるため、他人に教えないでください。");
+    }catch(err){
+      await showAlert("同期キーを発行できませんでした（通信を確認してください）。");
+    }
+  });
+  document.getElementById("syncJoinBtn").addEventListener("click", async function(){
+    var key = normalizeSyncKey(document.getElementById("syncKeyInput").value);
+    if(key.length !== 16){ await showAlert("同期キーは16文字（例：K7QP-M2XD-9WFA-3JRT）です。"); return; }
+    try{
+      await syncPost("/v1/pull", {key: key});
+    }catch(err){
+      await showAlert(err.code === "unknown_key" ? "この同期キーは見つかりませんでした。入力を確認してください。" : "連携できませんでした（通信を確認してください）。");
+      return;
+    }
+    var ok = await showConfirm("この端末のマーク・クイズ成績を、同期キーのデータと合わせて同期します。よろしいですか？", "連携する");
+    if(!ok) return;
+    document.getElementById("syncKeyInput").value = "";
+    await syncStart(key);
+  });
+  document.getElementById("syncNowBtn").addEventListener("click", function(){ syncNow(); });
+  document.getElementById("syncCopyBtn").addEventListener("click", async function(){
+    var cfg = syncConfig(); if(!cfg) return;
+    try{ await navigator.clipboard.writeText(formatSyncKey(cfg.key)); await showAlert("同期キーをコピーしました。"); }
+    catch(err){ await showAlert("コピーできませんでした。同期キー：" + formatSyncKey(cfg.key)); }
+  });
+  document.getElementById("syncLeaveBtn").addEventListener("click", async function(){
+    var ok = await showConfirm("この端末の同期を解除します。この端末のマーク・クイズ成績はそのまま残り、他の端末の同期にも影響しません。よろしいですか？", "解除する");
+    if(!ok) return;
+    try{ localStorage.removeItem("mtq_sync"); localStorage.removeItem("mtq_sync_marks"); localStorage.removeItem("mtq_sync_stats"); }catch(e){}
+    renderSyncUI();
+  });
+  // 開いたとき・画面に戻ったときに同期する
+  document.addEventListener("visibilitychange", function(){ if(document.visibilityState === "visible") syncNow(); });
+  renderSyncUI();
+  syncNow();
 
   /* ---------- quiz ---------- */
   var quizSetupEl = document.getElementById("quizSetup");
@@ -3248,6 +3447,7 @@
     s.attempts += total;
     s.correct += quiz.correct;
     safeSet("mtq_stats", s);
+    syncNoteStats(total, quiz.correct);
     refreshCumulativeStat();
   }
 

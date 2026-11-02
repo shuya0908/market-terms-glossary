@@ -31,6 +31,8 @@ self.addEventListener("activate", function(event){
 
 self.addEventListener("fetch", function(event){
   if(event.request.method !== "GET") return;
+  // 端末間同期のサーバー（別ドメイン）への通信などはキャッシュせず、ブラウザにそのまま任せる
+  if(new URL(event.request.url).origin !== self.location.origin) return;
   event.respondWith(
     fetch(event.request, { cache: "no-store" })
       .then(function(response){
