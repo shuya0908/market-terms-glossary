@@ -2540,7 +2540,7 @@
        マーク：用語ごとに [付けている=1/外した=0, 操作した時刻] を持ち、時刻の新しい方を採る（mtq_sync_marks）
        成績  ：端末ごとの累計 [解いた数, 正解数] を持ち、表示は全端末の合計（mtq_sync_stats）
      同期していない間は従来どおり mtq_marked / mtq_stats だけを使い、同期を始めたときに現在の内容から作る。 */
-  var SYNC_ENDPOINT = ""; // デプロイした同期サーバーのURL（例：https://market-terms-sync.xxx.workers.dev）。空なら同期機能を表示しない
+  var SYNC_ENDPOINT = "https://market-terms-sync.shuya-0908.workers.dev"; // デプロイした同期サーバーのURL（例：https://market-terms-sync.xxx.workers.dev）。空なら同期機能を表示しない
   var syncTimer = null, syncBusy = false;
   function syncConfig(){ var c = safeGet("mtq_sync"); return c && c.key ? c : null; }
   function formatSyncKey(k){ return k.replace(/(.{4})(?=.)/g, "$1-"); }
