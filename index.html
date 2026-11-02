@@ -554,12 +554,17 @@
   .result-actions{display:flex;gap:10px;}
 
   footer{margin-top:40px;color:var(--ink-muted);font-size:.78rem;font-family:var(--font-mono);}
-  .backup-bar{margin-top:32px;padding:14px 16px;border:1px solid var(--border);border-radius:4px;background:var(--surface-alt);display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:space-between;}
   .backup-note{flex:1 1 260px;color:var(--ink-muted);font-size:.82rem;line-height:1.5;margin:0;}
   /* 縮まない設定（flex:0 0 auto）だと、ボタン2つを横に並べた幅のまま狭い画面（320px幅など）からはみ出すため、縮めて折り返せるようにする */
   .backup-actions{display:flex;gap:8px;flex-wrap:wrap;flex:0 1 auto;min-width:0;}
-  .sync-bar{margin-top:12px;padding:14px 16px;border:1px solid var(--border);border-radius:4px;background:var(--surface-alt);display:flex;flex-direction:column;gap:10px;}
+  .sync-bar{margin-top:32px;padding:14px 16px;border:1px solid var(--border);border-radius:4px;background:var(--surface-alt);display:flex;flex-direction:column;gap:10px;}
   .sync-bar .backup-note{flex:none;}
+  /* バックアップは同期で多くの場面を代替できるため、見出しだけの折りたたみにまとめる */
+  .backup-fold{margin-top:12px;padding:10px 16px;border:1px solid var(--border);border-radius:4px;background:var(--surface-alt);}
+  .sync-bar[hidden] + .backup-fold{margin-top:32px;}
+  .backup-fold summary{cursor:pointer;font-size:.84rem;color:var(--ink-muted);}
+  .backup-fold[open] summary{margin-bottom:10px;}
+  .backup-body{display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:space-between;}
   .sync-off,.sync-on{display:flex;flex-wrap:wrap;align-items:center;gap:8px;}
   .sync-join{display:flex;gap:8px;flex:1 1 240px;min-width:0;}
   .sync-key-input{flex:1;min-width:0;font-family:var(--font-mono);font-size:.85rem;background:var(--surface);border:1px solid var(--border);color:var(--ink);padding:7px 10px;border-radius:4px;text-transform:uppercase;}
@@ -1666,15 +1671,6 @@
     <div class="empty" id="changelogEmpty" hidden>まだ修正履歴はありません。</div>
   </div>
 
-  <div class="backup-bar">
-    <p class="backup-note">マーク・クイズ成績は、このブラウザにのみ保存されます。ブラウザの設定などにより保存内容が消えることがあるため、定期的にバックアップの保存をおすすめします。</p>
-    <div class="backup-actions">
-      <button type="button" class="btn ghost small" id="backupSaveBtn">バックアップを保存</button>
-      <button type="button" class="btn ghost small" id="backupLoadBtn">バックアップから復元</button>
-      <input type="file" id="backupFileInput" accept="application/json,.json" hidden>
-    </div>
-  </div>
-
   <div class="sync-bar" id="syncBar" hidden>
     <p class="backup-note" id="syncNote">同期キーを使うと、マークとクイズ成績を複数の端末で同期できます。</p>
     <div class="sync-off" id="syncOff">
@@ -1693,6 +1689,18 @@
       </div>
     </div>
   </div>
+
+  <details class="backup-fold" id="backupFold">
+    <summary>バックアップ（ファイルに保存・復元）</summary>
+    <div class="backup-body">
+      <p class="backup-note" id="backupNote"></p>
+      <div class="backup-actions">
+        <button type="button" class="btn ghost small" id="backupSaveBtn">バックアップを保存</button>
+        <button type="button" class="btn ghost small" id="backupLoadBtn">バックアップから復元</button>
+        <input type="file" id="backupFileInput" accept="application/json,.json" hidden>
+      </div>
+    </div>
+  </details>
 
   <footer>市場系システムエンジニア向け学習ツール ・ 全 <span id="totalCount"></span> 語収録</footer>
 </div>
@@ -2634,6 +2642,9 @@
     });
   }
   function renderSyncUI(){
+    document.getElementById("backupNote").textContent = syncConfig()
+      ? "同期中は、誤操作（「すべて解除」など）もすべての端末に広がります。戻せるよう、控えをファイルに保存しておけます。復元するときは、先に同期を解除してください。"
+      : "マーク・クイズ成績は、このブラウザにのみ保存されます。ブラウザの設定などにより保存内容が消えることがあるため、ファイルに控えを保存しておけます。";
     var bar = document.getElementById("syncBar");
     bar.hidden = !SYNC_ENDPOINT;
     if(!SYNC_ENDPOINT) return;
