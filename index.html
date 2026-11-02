@@ -565,6 +565,7 @@
   .sync-key-input{flex:1;min-width:0;font-family:var(--font-mono);font-size:.85rem;background:var(--surface);border:1px solid var(--border);color:var(--ink);padding:7px 10px;border-radius:4px;text-transform:uppercase;}
   .sync-status{margin:0;flex:1 1 220px;font-size:.82rem;color:var(--ink-muted);display:flex;flex-direction:column;gap:2px;}
   .sync-key{font-family:var(--font-mono);color:var(--ink);font-weight:700;letter-spacing:.04em;}
+  .sync-key-row{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
   .sync-status .is-error{color:var(--danger-ink);}
 
   .modal-overlay{
@@ -1684,7 +1685,7 @@
       </div>
     </div>
     <div class="sync-on" id="syncOn" hidden>
-      <p class="sync-status"><span class="sync-key" id="syncKeyText"></span><span id="syncStatusText"></span></p>
+      <p class="sync-status"><span class="sync-key-row"><span class="sync-key" id="syncKeyText"></span><button type="button" class="btn-link" id="syncRevealBtn" aria-pressed="false">表示</button></span><span id="syncStatusText"></span></p>
       <div class="backup-actions">
         <button type="button" class="btn ghost small" id="syncCopyBtn">キーをコピー</button>
         <button type="button" class="btn ghost small" id="syncNowBtn">今すぐ同期</button>
@@ -2542,6 +2543,7 @@
      同期していない間は従来どおり mtq_marked / mtq_stats だけを使い、同期を始めたときに現在の内容から作る。 */
   var SYNC_ENDPOINT = "https://market-terms-sync.shuya-0908.workers.dev"; // デプロイした同期サーバーのURL（例：https://market-terms-sync.xxx.workers.dev）。空なら同期機能を表示しない
   var syncTimer = null, syncBusy = false;
+  var syncKeyRevealed = false; // 同期キーは覗き見を防ぐため、既定では伏せて表示する（ページを開き直すと伏せた状態に戻る）
   function syncConfig(){ var c = safeGet("mtq_sync"); return c && c.key ? c : null; }
   function formatSyncKey(k){ return k.replace(/(.{4})(?=.)/g, "$1-"); }
   function normalizeSyncKey(v){ return String(v || "").toUpperCase().replace(/[^0-9A-Z]/g, ""); }
@@ -2642,7 +2644,11 @@
       ? "この端末は同期中です。別の端末で同じ同期キーを入力すると、マークとクイズ成績が同期されます。"
       : "同期キーを使うと、マークとクイズ成績を複数の端末で同期できます。";
     if(!cfg) return;
-    document.getElementById("syncKeyText").textContent = "同期キー：" + formatSyncKey(cfg.key);
+    document.getElementById("syncKeyText").textContent = "同期キー：" +
+      (syncKeyRevealed ? formatSyncKey(cfg.key) : formatSyncKey(cfg.key.replace(/./g, "•")));
+    var revealBtn = document.getElementById("syncRevealBtn");
+    revealBtn.textContent = syncKeyRevealed ? "隠す" : "表示";
+    revealBtn.setAttribute("aria-pressed", String(syncKeyRevealed));
     var st = document.getElementById("syncStatusText");
     if(cfg.lastError){
       st.className = "is-error"; st.textContent = cfg.lastError;
@@ -2683,6 +2689,10 @@
     await syncStart(key);
   });
   document.getElementById("syncNowBtn").addEventListener("click", function(){ syncNow(); });
+  document.getElementById("syncRevealBtn").addEventListener("click", function(){
+    syncKeyRevealed = !syncKeyRevealed;
+    renderSyncUI();
+  });
   document.getElementById("syncCopyBtn").addEventListener("click", async function(){
     var cfg = syncConfig(); if(!cfg) return;
     try{ await navigator.clipboard.writeText(formatSyncKey(cfg.key)); await showAlert("同期キーをコピーしました。"); }
