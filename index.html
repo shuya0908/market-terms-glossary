@@ -2215,7 +2215,7 @@
     card.innerHTML =
       '<div class="card-row">' +
         '<div class="term-head">' +
-          '<span class="term-lines"><span class="term">'+g.t+'</span><span class="kana">'+g.k+'</span></span>' +
+          '<span class="term-lines"><span class="term">'+g.t+'</span><span class="kana">'+(g.k || '')+'</span></span>' +
         '</div>' +
         (opts.showTag ? '<span class="tag">'+cat.label+'</span>' : '') +
         markBtnHtml +
@@ -2317,7 +2317,8 @@
     var items = GLOSSARY.filter(function(g){
       if(!activeCats.has(g.c)) return false;
       if(!q) return true;
-      return g.t.toLowerCase().indexOf(q) > -1 || g.k.toLowerCase().indexOf(q) > -1 || g.d.toLowerCase().indexOf(q) > -1;
+      // 読み仮名（k）などが欠けた用語があっても検索全体が止まらないよう、空文字として扱う
+      return [g.t, g.k, g.d].some(function(v){ return String(v || "").toLowerCase().indexOf(q) > -1; });
     });
     countEl.textContent = items.length + " / " + GLOSSARY.length + " 語";
     document.getElementById("searchClear").hidden = !searchEl.value;
