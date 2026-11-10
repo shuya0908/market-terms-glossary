@@ -3353,6 +3353,7 @@
     var isCorrect = isBlankAnswerCorrect(q, inputEl.value);
     if(isCorrect) quiz.correct++;
     else markTerm(q.term.id);
+    document.getElementById("qScore").textContent = "正解 " + quiz.correct; // 解答した直後に正解数を反映する
     quiz.results.push({term:q.term, correct:isCorrect, type:q.type});
     syncMarkButtonsUI();
     inputEl.disabled = true;
@@ -3398,6 +3399,7 @@
     var isCorrect = !!optTerm && optTerm.id === q.correctTerm.id;
     if(isCorrect) quiz.correct++;
     else markTerm(q.term.id);
+    document.getElementById("qScore").textContent = "正解 " + quiz.correct; // 解答した直後に正解数を反映する
     quiz.results.push({term:q.term, correct:isCorrect, type:q.type});
     syncMarkButtonsUI();
     Array.prototype.forEach.call(document.querySelectorAll("#qOptions .opt"), function(b){
