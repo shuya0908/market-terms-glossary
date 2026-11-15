@@ -1,0 +1,139 @@
+{
+  "search": "-path:説明文の用語 -path:カテゴリ",
+  "showTags": false,
+  "showAttachments": false,
+  "hideUnresolved": true,
+  "showOrphans": true,
+  "showArrow": false,
+  "textFadeMultiplier": 0,
+  "nodeSizeMultiplier": 1,
+  "lineSizeMultiplier": 1,
+  "colorGroups": [
+    {
+      "query": "path:説明文の用語",
+      "color": {
+        "a": 1,
+        "rgb": 10066329
+      }
+    },
+    {
+      "query": "tag:#cat/board",
+      "color": {
+        "a": 1,
+        "rgb": 3381708
+      }
+    },
+    {
+      "query": "tag:#cat/order",
+      "color": {
+        "a": 1,
+        "rgb": 7588915
+      }
+    },
+    {
+      "query": "tag:#cat/market",
+      "color": {
+        "a": 1,
+        "rgb": 6697932
+      }
+    },
+    {
+      "query": "tag:#cat/clearing",
+      "color": {
+        "a": 1,
+        "rgb": 3394688
+      }
+    },
+    {
+      "query": "tag:#cat/derivative",
+      "color": {
+        "a": 1,
+        "rgb": 13382553
+      }
+    },
+    {
+      "query": "tag:#cat/option",
+      "color": {
+        "a": 1,
+        "rgb": 11678668
+      }
+    },
+    {
+      "query": "tag:#cat/ops",
+      "color": {
+        "a": 1,
+        "rgb": 3361996
+      }
+    },
+    {
+      "query": "tag:#cat/compliance",
+      "color": {
+        "a": 1,
+        "rgb": 13392179
+      }
+    },
+    {
+      "query": "tag:#cat/accounting",
+      "color": {
+        "a": 1,
+        "rgb": 13382489
+      }
+    },
+    {
+      "query": "tag:#cat/fx",
+      "color": {
+        "a": 1,
+        "rgb": 3394624
+      }
+    },
+    {
+      "query": "tag:#cat/bond",
+      "color": {
+        "a": 1,
+        "rgb": 3394751
+      }
+    },
+    {
+      "query": "tag:#cat/rates",
+      "color": {
+        "a": 1,
+        "rgb": 11783219
+      }
+    },
+    {
+      "query": "tag:#cat/fund",
+      "color": {
+        "a": 1,
+        "rgb": 4207564
+      }
+    },
+    {
+      "query": "tag:#cat/quant",
+      "color": {
+        "a": 1,
+        "rgb": 13411891
+      }
+    },
+    {
+      "query": "tag:#cat/risk",
+      "color": {
+        "a": 1,
+        "rgb": 5098547
+      }
+    },
+    {
+      "query": "tag:#cat/margin",
+      "color": {
+        "a": 1,
+        "rgb": 13385779
+      }
+    },
+    {
+      "query": "tag:#cat/alm",
+      "color": {
+        "a": 1,
+        "rgb": 13402163
+      }
+    }
+  ]
+}
