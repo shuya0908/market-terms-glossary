@@ -1,0 +1,44 @@
+name: Publish Obsidian vault branch
+
+# obsidian-vault/ の中身だけを、ルートに置いた obsidian-vault ブランチとして公開する。
+# iPhone のショートカットなどが
+#   https://github.com/<owner>/<repo>/archive/refs/heads/obsidian-vault.zip
+# から最新の Vault を取得できるようにするため（PC を介さずに同期できる）。
+# .obsidian/ は端末側の設定を壊さないよう含めない。履歴は持たず毎回1コミットで上書きする。
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'obsidian-vault/**'
+      - '.github/workflows/obsidian-vault-branch.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: obsidian-vault-branch
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Push vault snapshot to obsidian-vault branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          SRC_SHA=$(git rev-parse --short HEAD)
+          WORK=$(mktemp -d)
+          cp -r obsidian-vault/. "$WORK/"
+          rm -rf "$WORK/.obsidian"
+          cd "$WORK"
+          git init -q -b obsidian-vault
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Vault snapshot from main@${SRC_SHA}"
+          git push -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:obsidian-vault
