@@ -651,7 +651,7 @@
     <div class="controls">
       <div class="search-row">
         <div class="search-box">
-          <input type="search" id="search" placeholder="用語・定義をキーワード検索…" aria-label="用語検索">
+          <input type="search" id="search" placeholder="用語・定義・実務シーンを検索…" aria-label="用語検索">
           <button type="button" class="search-clear" id="searchClear" aria-label="検索語を消す" hidden>×</button>
         </div>
         <span class="count" id="count"></span>
@@ -2317,8 +2317,8 @@
     var items = GLOSSARY.filter(function(g){
       if(!activeCats.has(g.c)) return false;
       if(!q) return true;
-      // 読み仮名（k）などが欠けた用語があっても検索全体が止まらないよう、空文字として扱う
-      return [g.t, g.k, g.d].some(function(v){ return String(v || "").toLowerCase().indexOf(q) > -1; });
+      // 実務シーン（s）も検索対象にする。読み仮名（k）などが欠けた用語があっても検索全体が止まらないよう、空文字として扱う
+      return [g.t, g.k, g.d, g.s].some(function(v){ return String(v || "").toLowerCase().indexOf(q) > -1; });
     });
     countEl.textContent = items.length + " / " + GLOSSARY.length + " 語";
     document.getElementById("searchClear").hidden = !searchEl.value;
