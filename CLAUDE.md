@@ -40,7 +40,7 @@ git add -A obsidian-vault
 - カテゴリ名と色は `index.html` の `CATS` から読む。`CATS` を変えたら再生成する。
 - `obsidian-vault/.obsidian/graph.json`（グラフビューの初期設定）は初回だけ作り、以後は上書きしない。それ以外の `.obsidian/` の中身は `.gitignore` で除外している。
 - GitHub Pages には配信しない（`pages.yml` の `cp` に入れない）。
-- 利用者のPC（Windows）では、タスクスケジューラ（`MarketTermsVaultSync`、毎朝6時30分・7時30分とログオン時）が、このリポジトリの `obsidian-vault/` を取得して iCloud の専用Vault（`マーケット用語`）に上書きしている。`用語/`・`カテゴリ/`・`説明文の用語/` の3フォルダはミラー（削除も反映）し、`.obsidian/graph.json` は初回だけ書き込む。**このフォルダ名や構成を変えると利用者側の同期が壊れるため、変える場合は利用者に同期スクリプト（PC側の `sync-market-terms-vault.ps1`）の修正が必要なことを伝えること。** 定期実行の用語見直し（毎朝6時開始）は、PC側の取得（6時30分）より前に push を終える前提になっている。
+- 利用者のPC（Windows）では、タスクスケジューラ（`MarketTermsVaultSync`、毎日10時30分・11時30分とログオン時）が、このリポジトリの `obsidian-vault/` を取得して iCloud の専用Vault（`マーケット用語`）に上書きしている。`用語/`・`カテゴリ/`・`説明文の用語/` の3フォルダはミラー（削除も反映）し、`.obsidian/graph.json` は初回だけ書き込む。**このフォルダ名や構成を変えると利用者側の同期が壊れるため、変える場合は利用者に同期スクリプト（PC側の `sync-market-terms-vault.ps1`）の修正が必要なことを伝えること。** 定期実行の用語見直し（毎日10時開始）は、PC側の取得（10時30分）より前に push を終える前提になっている（遅れた場合も11時30分の取得までには終える）。
 
 ## 作業報告の言語
 
